@@ -9,6 +9,7 @@
     "install:all": "npm --prefix client install --include=dev",
     "dev": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
+    "start": "node server.js",
     "preview": "npm --prefix client run preview",
     "test:smoke": "npm --prefix client run test:smoke"
   }
