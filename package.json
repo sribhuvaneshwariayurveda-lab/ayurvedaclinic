@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "description": "Premium Ayurveda clinic website and admin CMS",
   "scripts": {
-    "install:all": "npm --prefix client install",
+    "postinstall": "npm --prefix client install --include=dev",
+    "prebuild": "npm --prefix client install --include=dev",
+    "install:all": "npm --prefix client install --include=dev",
     "dev": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "preview": "npm --prefix client run preview",
