@@ -1,0 +1,356 @@
+/* ==========================================================================
+   Motion layer — Sri Bhuvaneshwari Ayurveda Peedam
+   --------------------------------------------------------------------------
+   Every animation in this file is scoped behind [data-motion="full"|"subtle"],
+   an attribute set on <html> by the inline bootstrap in index.html (and
+   re-validated by lib/motionSettings.js). Consequences:
+
+     • JavaScript disabled / bundle fails  -> no attribute -> static, fully
+       visible content (nothing is hidden by default).
+     • data-motion="off"                   -> all non-essential motion off
+       (also forced automatically for prefers-reduced-motion).
+     • data-motion="subtle"                -> shorter distances / durations,
+       decorative loops paused.
+
+   Motion is compositor-friendly (transform / opacity / clip-path only) and
+   runs once — reveals unobserve themselves after firing, decorative draw-ins
+   use `forwards` rather than infinite loops.
+   ========================================================================== */
+
+/* ---------- Shared easing ---------- */
+:root {
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.33, 0.02, 0.2, 1);
+}
+
+/* ==========================================================================
+   Scroll reveal
+   Hidden-initial state exists ONLY while motion is active. Base .reveal
+   (global.css) is a no-op marker so content is visible without JS.
+   ========================================================================== */
+[data-motion="full"] .reveal,
+[data-motion="subtle"] .reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s var(--ease-out) var(--reveal-delay, 0s),
+    transform 0.8s var(--ease-out) var(--reveal-delay, 0s);
+}
+
+[data-motion="subtle"] .reveal {
+  transform: translateY(16px);
+  transition-duration: 0.55s;
+}
+
+[data-motion="full"] .reveal--fade,
+[data-motion="subtle"] .reveal--fade {
+  transform: none;
+}
+
+[data-motion="full"] .reveal--zoom,
+[data-motion="subtle"] .reveal--zoom {
+  transform: scale(0.965);
+}
+
+[data-motion="full"] .reveal--left,
+[data-motion="subtle"] .reveal--left {
+  transform: translateX(-28px);
+}
+
+[data-motion="full"] .reveal--right,
+[data-motion="subtle"] .reveal--right {
+  transform: translateX(28px);
+}
+
+[data-motion="full"] .reveal.is-visible,
+[data-motion="subtle"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Staggered children inside a revealed section heading */
+[data-motion="full"] .section-head.is-visible > *,
+[data-motion="subtle"] .section-head.is-visible > * {
+  animation: riseIn 0.75s var(--ease-out) both;
+}
+
+[data-motion="full"] .section-head.is-visible > *:nth-child(2),
+[data-motion="subtle"] .section-head.is-visible > *:nth-child(2) {
+  animation-delay: 0.07s;
+}
+[data-motion="full"] .section-head.is-visible > *:nth-child(3),
+[data-motion="subtle"] .section-head.is-visible > *:nth-child(3) {
+  animation-delay: 0.14s;
+}
+[data-motion="full"] .section-head.is-visible > *:nth-child(4),
+[data-motion="subtle"] .section-head.is-visible > *:nth-child(4) {
+  animation-delay: 0.21s;
+}
+
+/* Gold divider draws in beneath each heading */
+[data-motion="full"] .section-head.is-visible .divider-gold,
+[data-motion="subtle"] .section-head.is-visible .divider-gold {
+  animation: riseIn 0.75s var(--ease-out) 0.14s both, dividerGrow 0.9s var(--ease-out) 0.18s both;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dividerGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ==========================================================================
+   Hero — entrance choreography (runs on mount, no observer needed)
+   ========================================================================== */
+[data-motion="full"] .hero-anim {
+  animation: heroIn 0.95s var(--ease-out) var(--d, 0s) both;
+}
+
+[data-motion="subtle"] .hero-anim {
+  animation: heroIn 0.6s var(--ease-out) var(--d, 0s) both;
+}
+
+@keyframes heroIn {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Curtain reveal on the hero figure + slow settle of the image inside */
+[data-motion="full"] .hero__figure {
+  animation: figureReveal 1.15s var(--ease-out) 0.1s both;
+}
+
+[data-motion="subtle"] .hero__figure {
+  animation: figureReveal 0.7s var(--ease-out) 0.05s both;
+}
+
+@keyframes figureReveal {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+[data-motion="full"] .hero__figure .media img,
+[data-motion="full"] .hero__figure .media .media__placeholder,
+[data-motion="subtle"] .hero__figure .media img,
+[data-motion="subtle"] .hero__figure .media .media__placeholder {
+  animation: figureZoom 2s var(--ease-out) 0.1s both;
+}
+
+@keyframes figureZoom {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Hero supporting cards ease in after the figure */
+[data-motion="full"] .hero__badge,
+[data-motion="full"] .hero__float-card {
+  animation: badgeIn 0.7s var(--ease-out) 1s both;
+}
+
+[data-motion="subtle"] .hero__badge,
+[data-motion="subtle"] .hero__float-card {
+  animation: badgeIn 0.5s var(--ease-out) 0.55s both;
+}
+
+@keyframes badgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Decorative botanical line-art — draws itself in once (pathLength=1)
+   ========================================================================== */
+[data-motion="full"] .botanical .draw,
+[data-motion="subtle"] .botanical .draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: botanicalDraw 2.6s var(--ease-soft) 0.5s forwards;
+}
+
+[data-motion="full"] .botanical .draw--late,
+[data-motion="subtle"] .botanical .draw--late {
+  animation-delay: 1.1s;
+}
+
+@keyframes botanicalDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ==========================================================================
+   Page transitions (react-router route changes)
+   ========================================================================== */
+[data-motion="full"] .page {
+  animation: pageIn 0.55s var(--ease-out) both;
+}
+
+[data-motion="subtle"] .page {
+  animation: pageIn 0.35s var(--ease-out) both;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Mobile drawer — staggered link entrance
+   ========================================================================== */
+[data-motion="full"] .drawer.is-open .drawer__links a,
+[data-motion="subtle"] .drawer.is-open .drawer__links a {
+  animation: drawerLinkIn 0.5s var(--ease-out) both;
+}
+
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(1) { animation-delay: 0.08s; }
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(2) { animation-delay: 0.14s; }
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(3) { animation-delay: 0.2s; }
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(4) { animation-delay: 0.26s; }
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(5) { animation-delay: 0.32s; }
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(6) { animation-delay: 0.38s; }
+[data-motion="full"] .drawer.is-open .drawer__links a:nth-child(7) { animation-delay: 0.44s; }
+[data-motion="subtle"] .drawer.is-open .drawer__links a:nth-child(odd) { animation-delay: 0.06s; }
+
+@keyframes drawerLinkIn {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Floating WhatsApp — single tasteful entrance (no continuous bouncing)
+   ========================================================================== */
+[data-motion="full"] .wa {
+  animation: waIn 0.7s var(--ease-out) 1.1s both;
+}
+
+[data-motion="subtle"] .wa {
+  animation: waIn 0.5s var(--ease-out) 0.6s both;
+}
+
+@keyframes waIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+[data-motion="full"] .wa__tooltip,
+[data-motion="subtle"] .wa__tooltip {
+  animation: badgeIn 0.55s var(--ease-out) 1.5s both;
+}
+
+/* ==========================================================================
+   Decorative loops — paused or removed when motion is subtle or off
+   ========================================================================== */
+[data-motion="subtle"] .strip__track,
+[data-motion="off"] .strip__track {
+  animation-play-state: paused;
+}
+
+[data-motion="subtle"] .float-anim {
+  animation: none;
+}
+
+[data-motion="subtle"] .gold-gradient-text {
+  animation: none;
+  background-position: 50%;
+}
+
+[data-motion="off"] .strip__track,
+[data-motion="off"] .float-anim,
+[data-motion="off"] .gold-gradient-text {
+  animation: none;
+}
+
+[data-motion="off"] .gold-gradient-text {
+  background: none;
+  -webkit-text-fill-color: var(--gold);
+  color: var(--gold);
+}
+
+[data-motion="off"] .botanical .draw {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  animation: none;
+}
+
+/* Reduced-motion: belt and braces (motionSettings also forces "off") */
+@media (prefers-reduced-motion: reduce) {
+  [data-motion] .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  [data-motion] .hero-anim,
+  [data-motion] .hero__figure,
+  [data-motion] .hero__figure .media img,
+  [data-motion] .hero__figure .media .media__placeholder,
+  [data-motion] .hero__badge,
+  [data-motion] .hero__float-card,
+  [data-motion] .page,
+  [data-motion] .wa,
+  [data-motion] .wa__tooltip,
+  [data-motion] .drawer.is-open .drawer__links a,
+  [data-motion] .section-head.is-visible > *,
+  [data-motion] .botanical .draw {
+    animation: none !important;
+  }
+  [data-motion] .botanical .draw {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+  .strip__track,
+  .float-anim,
+  .gold-gradient-text {
+    animation: none !important;
+  }
+}

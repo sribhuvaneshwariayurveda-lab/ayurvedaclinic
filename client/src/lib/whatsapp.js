@@ -1,0 +1,48 @@
+import { clinic } from "../data/content.js";
+
+/**
+ * Normalise a phone number for use in a wa.me link (digits only, no +, spaces
+ * or dashes). The number ultimately comes from the CMS/admin settings.
+ */
+export function normaliseNumber(raw) {
+  return String(raw || "").replace(/[^\d]/g, "");
+}
+
+/**
+ * Build a wa.me link with a correctly URL-encoded, pre-filled message.
+ */
+export function buildWhatsAppLink(message, number = clinic.whatsapp) {
+  const n = normaliseNumber(number);
+  const text = message ? `?text=${encodeURIComponent(message)}` : "";
+  return `https://wa.me/${n}${text}`;
+}
+
+/** A short general enquiry message used by the floating button. */
+export function generalEnquiryMessage() {
+  return `Hello ${clinic.name}, I would like to book an Ayurvedic consultation.`;
+}
+
+/**
+ * Build the appointment enquiry message. This is an ENQUIRY, not a confirmed
+ * appointment — the label is intentionally explicit.
+ */
+export function appointmentEnquiryMessage({ name, phone, date, time, treatment }) {
+  const lines = [
+    `Hello ${clinic.name}, I would like to enquire about an appointment.`,
+    "",
+    `Name: ${name || "-"}`,
+    `Phone: ${phone || "-"}`,
+    `Preferred date: ${date || "-"}`,
+    `Preferred time: ${time || "-"}`,
+    `Treatment of interest: ${treatment || "-"}`,
+    "",
+    "This is an appointment enquiry, not a confirmed booking."
+  ];
+  return lines.join("\n");
+}
+
+export function openWhatsApp(message) {
+  const url = buildWhatsAppLink(message);
+  window.open(url, "_blank", "noopener,noreferrer");
+  return url;
+}

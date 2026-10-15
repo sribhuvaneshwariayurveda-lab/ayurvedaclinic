@@ -1,0 +1,13 @@
+{
+  "name": "ayurveda-clinic",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Premium Ayurveda clinic website and admin CMS",
+  "scripts": {
+    "install:all": "npm --prefix client install",
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "preview": "npm --prefix client run preview",
+    "test:smoke": "npm --prefix client run test:smoke"
+  }
+}

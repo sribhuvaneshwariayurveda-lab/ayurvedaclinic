@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Design tokens — Ayurveda Clinic
+   Reference-inspired structure (Jamal Dentistry), re-skinned to an Ayurvedic
+   botanical palette. Original values, not copied assets.
+   ========================================================================== */
+:root {
+  /* --- Brand: greens --- */
+  --forest: #1b3a2f;
+  --forest-deep: #122a22;
+  --forest-soft: #2a4a3c;
+  --botanical: #6e8b6b;
+  --botanical-light: #9db39a;
+  --botanical-mist: #dfe7da;
+
+  /* --- Brand: ivories --- */
+  --ivory: #f7f3ea;
+  --ivory-soft: #fbf9f4;
+  --champagne: #f1eadb;
+
+  /* --- Accent: restrained gold --- */
+  --gold: #c9a24b;
+  --gold-dark: #a9842f;
+  --gold-light: #e4ce93;
+
+  /* --- Ink --- */
+  --ink: #16201b;
+  --ink-soft: #33413a;
+  --ink-muted: #6b7a72;
+
+  /* --- Surfaces --- */
+  --white: #ffffff;
+  --line: rgba(27, 58, 47, 0.12);
+  --line-gold: rgba(201, 162, 75, 0.32);
+
+  /* --- Type --- */
+  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-label: "Cinzel", Georgia, serif;
+
+  /* --- Spacing scale --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+
+  /* --- Layout --- */
+  --container: 1200px;
+  --container-narrow: 820px;
+  --header-h: 84px;
+
+  /* --- Radius --- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* --- Elevation (mirrors reference luxury-shadow) --- */
+  --shadow-lux: 0 20px 60px rgba(18, 42, 34, 0.08), 0 4px 16px rgba(201, 162, 75, 0.1);
+  --shadow-lux-hover: 0 32px 80px rgba(18, 42, 34, 0.12), 0 8px 24px rgba(201, 162, 75, 0.2);
+  --shadow-soft: 0 12px 30px rgba(18, 42, 34, 0.06);
+
+  /* --- Motion --- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 0.4s;
+
+  /* --- Gradients --- */
+  --grad-gold: linear-gradient(135deg, #c9a24b, #e4ce93, #a9842f);
+  --grad-forest: linear-gradient(160deg, #1b3a2f 0%, #122a22 100%);
+  --grad-ivory: linear-gradient(180deg, #fbf9f4 0%, #f1eadb 100%);
+}

@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# build output
+client/dist/
+server/dist/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# media uploads (runtime)
+uploads/
+
+# database files (runtime)
+*.sqlite
+*.sqlite3
+*.db
+
+# editor / os
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# logs
+*.log
+npm-debug.log*
