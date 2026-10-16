@@ -4,11 +4,15 @@ import Reveal from "../ui/Reveal.jsx";
 import SectionHeading from "../ui/SectionHeading.jsx";
 
 export default function ContactClinic() {
-  const directions = clinic.mapEmbed
-    ? null
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        clinic.addressLines.join(", ")
-      )}`;
+  const fullAddress = clinic.addressLines.join(", ");
+  // Exact clinic location link (single source of truth in data/content.js).
+  const directions =
+    clinic.mapsUrl ||
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+  // Query-based embed of the supplied address (no coordinates invented).
+  // A full embed URL in clinic.mapEmbed takes precedence when provided.
+  const mapSrc =
+    clinic.mapEmbed || `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`;
 
   return (
     <section className="section" id="contact">
@@ -64,46 +68,26 @@ export default function ContactClinic() {
                 ))}
               </span>
             </div>
-            {directions ? (
-              <a
-                className="btn btn--outline btn--sm"
-                href={directions}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ marginTop: "1.2rem" }}
-              >
-                Get Directions
-              </a>
-            ) : null}
+            <a
+              className="btn btn--forest"
+              href={directions}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Get directions to ${clinic.name} on Google Maps`}
+              style={{ marginTop: "1.2rem" }}
+            >
+              Get Directions
+            </a>
           </Reveal>
 
           <Reveal delay={1} className="map">
-            {clinic.mapEmbed ? (
-              <iframe
-                title="Clinic location"
-                src={clinic.mapEmbed}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            ) : (
-              <div
-                style={{
-                  height: "100%",
-                  minHeight: 380,
-                  display: "grid",
-                  placeItems: "center",
-                  textAlign: "center",
-                  padding: "2rem",
-                  color: "var(--ink-muted)"
-                }}
-              >
-                <span>
-                  Map embed placeholder.
-                  <br />
-                  The clinic’s Google Maps embed will appear here once the address is supplied.
-                </span>
-              </div>
-            )}
+            <iframe
+              title={`Map — ${clinic.name}, ${fullAddress}`}
+              src={mapSrc}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </Reveal>
         </div>
       </div>

@@ -77,8 +77,16 @@ if (isHome) {
   check("hero heading renders", html.includes("Restoring balance with"));
   check("appointment form renders", html.includes("Send Enquiry on WhatsApp"));
   check("map directions fallback link", html.includes("google.com/maps"));
+  check("exact clinic location link present", html.includes("https://maps.app.goo.gl/4nWZfsS9LmrFe2pD9"));
+  check("full street address renders", html.includes("87/92A, South Street"));
   check("botanical decorative SVG present", html.includes("botanical"));
   check("hero entrance classes present", html.includes("hero-anim"));
+  check("cinematic hero image present", html.includes("/images/hero-diyo.jpg"));
+  check("doctor registration number renders", html.includes("2366/A"));
+  check("intro section renders", html.includes("The Science of Life"));
+  check("herbs section renders", html.includes("Materia Medica"));
+  check("gallery renders", html.includes('id="gallery"'));
+  check("hero books via WhatsApp", html.includes("Book an Appointment"));
 } else {
   check("placeholder page renders heading", html.includes("This page is coming next"));
   check("route path shown", html.includes(new URL(url).pathname));

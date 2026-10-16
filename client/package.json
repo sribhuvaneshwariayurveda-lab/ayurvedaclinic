@@ -10,6 +10,7 @@
     "test:smoke": "node scripts/smoke.mjs http://localhost/ full homepage-full && node scripts/smoke.mjs \"http://localhost/?motion=subtle\" subtle homepage-subtle && node scripts/smoke.mjs \"http://localhost/?motion=off\" off homepage-off && node scripts/smoke.mjs http://localhost/treatments full treatments-route && node scripts/smoke.mjs http://localhost/case-studies full case-studies-route"
   },
   "dependencies": {
+    "framer-motion": "^14.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"

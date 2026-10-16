@@ -6,6 +6,7 @@ import { initMotion } from "./lib/motionSettings.js";
 import "./styles/global.css";
 import "./styles/motion.css";
 import "./styles/components.css";
+import "./styles/cinema.css";
 
 window.__SBAP_BOOTED__ = true;
 initMotion();

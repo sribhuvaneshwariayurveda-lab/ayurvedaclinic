@@ -1,13 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { clinic, nav } from "../../data/content.js";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { clinic } from "../../data/content.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
+import { osPrefersReducedMotion } from "../../lib/motionSettings.js";
 import { IconLeaf, IconMenu, IconPhone, IconX, IconWhatsApp } from "../ui/Icons.jsx";
+
+const sections = [
+  { label: "Home", to: "top" },
+  { label: "About", to: "about" },
+  { label: "Treatments", to: "treatments" },
+  { label: "Gallery", to: "gallery" },
+  { label: "Contact", to: "contact" }
+];
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
 
@@ -42,6 +52,26 @@ export default function Header() {
     };
   }, [open]);
 
+  const goSection = (id) => (e) => {
+    e.preventDefault();
+    setOpen(false);
+    const scroll = () => {
+      if (id === "top") {
+        window.scrollTo({ top: 0, behavior: osPrefersReducedMotion() ? "auto" : "smooth" });
+        return;
+      }
+      document
+        .getElementById(id)
+        ?.scrollIntoView({ behavior: osPrefersReducedMotion() ? "auto" : "smooth", block: "start" });
+    };
+    if (location.pathname !== "/") {
+      navigate("/");
+      window.setTimeout(scroll, 120);
+    } else {
+      scroll();
+    }
+  };
+
   return (
     <>
       <div className="topbar">
@@ -68,7 +98,7 @@ export default function Header() {
       <header className={`header${scrolled ? " is-scrolled" : ""}`}>
         <div className="container header__inner">
           <Link to="/" className="brand" aria-label={`${clinic.name} home`}>
-            <IconLeaf className="brand__mark" width={42} height={42} style={{ color: "var(--forest)" }} />
+            <IconLeaf className="brand__mark" width={42} height={42} style={{ color: "var(--gold-light)" }} />
             <span className="brand__text">
               <span className="brand__name">{clinic.name}</span>
               <span className="brand__tag">{clinic.tagline}</span>
@@ -77,15 +107,11 @@ export default function Header() {
 
           <nav className="nav" aria-label="Primary">
             <ul className="nav__links">
-              {nav.map((item) => (
+              {sections.map((item) => (
                 <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    end={item.to === "/"}
-                    className={({ isActive }) => `nav-link${isActive ? " is-active" : ""}`}
-                  >
+                  <a href={item.to === "top" ? "/" : `#${item.to}`} onClick={goSection(item.to)} className="nav-link">
                     {item.label}
-                  </NavLink>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -135,10 +161,10 @@ export default function Header() {
             </button>
           </div>
           <nav className="drawer__links" aria-label="Mobile">
-            {nav.map((item) => (
-              <Link key={item.to} to={item.to}>
+            {sections.map((item) => (
+              <a key={item.to} href={item.to === "top" ? "/" : `#${item.to}`} onClick={goSection(item.to)}>
                 {item.label}
-              </Link>
+              </a>
             ))}
           </nav>
           <a

@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { treatmentCategories, treatments } from "../../data/content.js";
 import { IconArrowRight } from "../ui/Icons.jsx";
-import Media from "../ui/Media.jsx";
-import Reveal from "../ui/Reveal.jsx";
+import { CineImage, CineReveal, Parallax } from "../ui/Cine.jsx";
 import SectionHeading from "../ui/SectionHeading.jsx";
 
 export default function Treatments() {
@@ -11,7 +10,7 @@ export default function Treatments() {
   const list = active === "All" ? treatments : treatments.filter((t) => t.cat === active);
 
   return (
-    <section className="section section--ivory" id="treatments">
+    <section className="section" id="treatments" aria-label="Ayurvedic treatments and services">
       <div className="container">
         <SectionHeading
           center
@@ -21,7 +20,7 @@ export default function Treatments() {
           desc="From detailed consultation and Panchakarma to everyday wellness guidance — every plan is tailored to your constitution and reviewed by the physician."
         />
 
-        <Reveal className="filters">
+        <CineReveal className="filters">
           {treatmentCategories.map((cat) => (
             <button
               key={cat}
@@ -32,25 +31,34 @@ export default function Treatments() {
               {cat}
             </button>
           ))}
-        </Reveal>
+        </CineReveal>
 
-        <div className="treatments__grid">
-          {list.map((t, i) => (
-            <Reveal key={t.title} delay={(i % 3) + 1} className="tcard lift">
-              <div className="tcard__media">
-                <Media label={t.mediaLabel} />
-              </div>
-              <div className="tcard__body">
-                <span className="tcard__cat">{t.cat}</span>
-                <h3 className="tcard__title">{t.title}</h3>
-                <p className="tcard__desc">{t.desc}</p>
-                <Link className="tcard__link" to="/treatments">
-                  Learn more
-                  <IconArrowRight width={16} height={16} />
+        <div className="tx-layout">
+          <div className="tx-index">
+            {list.map((t, i) => (
+              <CineReveal key={t.title} delay={Math.min(i * 0.06, 0.3)}>
+                <Link className="tx-row" to="/treatments" aria-label={`${t.title} — learn more`}>
+                  <span className="tx-row__num" aria-hidden="true">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span>
+                    <h3 className="tx-row__title">{t.title}</h3>
+                    <p className="tx-row__desc">{t.desc}</p>
+                  </span>
+                  <span className="tx-row__cat">
+                    {t.cat} <IconArrowRight width={14} height={14} style={{ verticalAlign: "-2px" }} />
+                  </span>
                 </Link>
-              </div>
-            </Reveal>
-          ))}
+              </CineReveal>
+            ))}
+          </div>
+
+          <Parallax className="tx-side" amount={50}>
+            <CineImage
+              src="/images/mortar-sun.jpg"
+              alt="Stone mortar and pestle in warm sunlight"
+            />
+          </Parallax>
         </div>
       </div>
     </section>

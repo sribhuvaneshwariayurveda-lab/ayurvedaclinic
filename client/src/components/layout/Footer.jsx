@@ -110,6 +110,13 @@ export default function Footer() {
             <Link to="/contact">Contact</Link>
           </span>
         </div>
+
+        <p className="footer__credit">
+          Botanical photography: Tulsi garden © Challiyan (CC BY-SA 2.5); Tulsi macro ©
+          Muhammad Mahdi Karim (CC BY-SA 2.5); mortar © Takeaway (CC BY-SA 3.0); Tulsi
+          spike © Vaikoovery (CC BY 3.0); Tulsi sprout © Vengolis (CC BY-SA 4.0); temple
+          lamp © BRPever (CC BY-SA 4.0) — via Wikimedia Commons.
+        </p>
       </div>
     </footer>
   );

@@ -10,16 +10,24 @@ export const clinic = {
   tagline: "Classical Ayurveda",
   doctor: "Dr. B. Neeraj Kalkin",
   qualifications: "BAMS",
+  regNo: "2366/A",
   phone: "+91 96299 07763",
   phoneDisplay: "+91 96299 07763",
   email: "",
   whatsapp: "919629907763",
-  addressLines: ["Pasupathipalayam, Karur", "Tamil Nadu"],
+  addressLines: ["87/92A, South Street, Pasupathipalayam", "Karur, Tamil Nadu, India"],
+  /* Clinic location — single source of truth (CMS-editable).
+     mapsUrl is the exact Google Maps location link shared by the clinic and
+     is used for the "Get Directions" button (opens in a new tab).
+     mapEmbed is an optional full Google Maps embed URL override; when empty,
+     the site embeds a query-based map of the address above (no coordinates
+     are invented or stored). */
+  mapsUrl: "https://maps.app.goo.gl/4nWZfsS9LmrFe2pD9",
   hours: [
     { day: "Monday – Saturday", time: "9:00 AM – 7:00 PM" },
     { day: "Sunday", time: "By appointment" }
   ],
-  mapEmbed: "",
+  mapEmbed: "", // optional full Google Maps embed URL override (see mapsUrl note above)
   socials: {
     instagram: "",
     facebook: "",
@@ -200,7 +208,65 @@ export const faqs = [
 ];
 
 export const contact = {
-  label: "Visit the Clinic",
+  label: "Visit Our Clinic",
   title: "Book your consultation",
   desc: "Share your preferred date and we will help you find a suitable time. Enquiries are answered during clinic hours."
+};
+
+/* --------------------------------------------------------------------------
+   Cinematic redesign content.
+   Imagery: real photographs from Wikimedia Commons (CC licences — see
+   credits in the gallery section and footer). Captions describe the subject
+   of each photo only; no photo is presented as the clinic's own premises,
+   staff or patients.
+   -------------------------------------------------------------------------- */
+
+export const intro = {
+  label: "The Science of Life",
+  title: "Ayurveda, practised",
+  titleAccent: "the classical way.",
+  paragraphs: [
+    "Ayurveda — the science of life — understands health as balance between body, mind and daily routine. At Sri Bhuvaneshwari Ayurveda Peedam, that understanding guides every consultation: unhurried, personal and grounded in classical method.",
+    "From the first Nadi and Prakriti assessment to herbal formulations prepared to traditional standards, care here follows time-honoured practice with honest, clearly explained expectations."
+  ],
+  image: {
+    src: "/images/tulsi-grove.jpg",
+    alt: "Tulsi (holy basil) leaves photographed in soft natural light"
+  }
+};
+
+export const herbs = {
+  label: "Materia Medica",
+  title: "Drawn from",
+  titleAccent: "the botanical world.",
+  desc: "Classical formulations begin with plants — identified, prepared and combined according to traditional method. A glimpse of the botanical world behind the clinic's herbal medicine.",
+  cards: [
+    {
+      title: "Tulsi",
+      latin: "Ocimum tenuiflorum",
+      text: "Holy basil, among the most revered plants of the classical tradition, photographed in flower.",
+      image: { src: "/images/tulsi-macro.jpg", alt: "Close-up of a Tulsi flowering spike" }
+    },
+    {
+      title: "Prepared to tradition",
+      latin: "Stone-ground formulations",
+      text: "Herbs ground and blended in the traditional manner before being prepared as prescribed medicine.",
+      image: { src: "/images/mortar-sun.jpg", alt: "Stone mortar and pestle in warm sunlight" }
+    }
+  ]
+};
+
+export const gallery = {
+  label: "Gallery",
+  title: "A botanical",
+  titleAccent: "study.",
+  desc: "Light, leaf and flame — the raw materials of classical practice.",
+  images: [
+    { src: "/images/hero-diyo.jpg", alt: "Flame of a traditional brass oil lamp", caption: "Deepam — the clinic lamp", credit: "BRPever, CC BY-SA 4.0, via Wikimedia Commons" },
+    { src: "/images/tulsi-grove.jpg", alt: "Tulsi leaves in soft natural light", caption: "Tulsi in the garden", credit: "Challiyan, CC BY-SA 2.5, via Wikimedia Commons" },
+    { src: "/images/tulsi-macro.jpg", alt: "Close-up of a Tulsi flowering spike", caption: "Tulsi in flower", credit: "Muhammad Mahdi Karim, CC BY-SA 2.5, via Wikimedia Commons" },
+    { src: "/images/mortar-sun.jpg", alt: "Stone mortar and pestle in warm sunlight", caption: "Stone-ground preparation", credit: "Takeaway, CC BY-SA 3.0, via Wikimedia Commons" },
+    { src: "/images/tulsi-spike.jpg", alt: "Tulsi flower spike against a dark background", caption: "Manjari — the flower spike", credit: "Vaikoovery, CC BY 3.0, via Wikimedia Commons" },
+    { src: "/images/tulsi-sprout.jpg", alt: "Young Tulsi leaves against mossy bark", caption: "New growth", credit: "Vengolis, CC BY-SA 4.0, via Wikimedia Commons" }
+  ]
 };
