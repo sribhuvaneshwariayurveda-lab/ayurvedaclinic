@@ -73,10 +73,10 @@ export default function Footer() {
             <h4>Care</h4>
             <div className="footer__links">
               <Link to="/treatments">Treatments</Link>
-              <Link to="/case-studies">Patient Results</Link>
-              <Link to="/testimonials">Testimonials</Link>
+              <Link to="/products">Products</Link>
+              <Link to="/gallery">Gallery</Link>
+              <Link to="/faqs">FAQs</Link>
               <Link to="/contact">Book Appointment</Link>
-              <Link to="/privacy-policy">Privacy Policy</Link>
             </div>
           </div>
 

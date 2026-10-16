@@ -10,12 +10,24 @@ export default function AboutDoctor() {
           <span className="section-label" style={{ color: "var(--gold-light)" }}>
             {about.label}
           </span>
-          <div className="doc-card__mono" aria-hidden="true">BN</div>
+          <div className="doc-card__photo">
+            <img
+              src={about.photos.doctor.src}
+              alt={about.photos.doctor.alt}
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.closest(".doc-card__photo")?.classList.add("is-missing");
+                e.currentTarget.remove();
+              }}
+            />
+            <div className="doc-card__mono" aria-hidden="true">BN</div>
+          </div>
           <h3>{clinic.doctor}</h3>
           <div className="doc-card__qual">
-            {clinic.qualifications} · Registered Medical Practitioner
+            {clinic.qualifications} · {clinic.university} ({clinic.graduationYear})
           </div>
-          <span className="doc-card__reg">Reg. No. {clinic.regNo}</span>
+          <span className="doc-card__reg">Reg. No. {clinic.regNo} · {clinic.experience}</span>
           <p style={{ marginTop: "1.4rem" }}>
             {clinic.doctor}, {clinic.qualifications} (Reg. No. {clinic.regNo}), leads every
             consultation personally — from the first assessment to each review visit.

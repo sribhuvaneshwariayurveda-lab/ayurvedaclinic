@@ -68,6 +68,8 @@ const html = window.document.getElementById("root").innerHTML;
 console.log(`\n=== ${label} ===`);
 
 const isHome = new URL(url).pathname === "/";
+const realRoutes = ["/about", "/treatments", "/products", "/gallery", "/faqs", "/contact"];
+const pathname = new URL(url).pathname;
 if (isHome) {
   check("renders clinic name", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));
   check("renders doctor name", html.includes("Dr. B. Neeraj Kalkin"));
@@ -83,10 +85,18 @@ if (isHome) {
   check("hero entrance classes present", html.includes("hero-anim"));
   check("cinematic hero image present", html.includes("/images/hero-diyo.jpg"));
   check("doctor registration number renders", html.includes("2366/A"));
+  check("doctor university renders", html.includes("M.G.R. Medical University"));
+  check("products section renders", html.includes("Kidney Care Syrup"));
+  check("doctor photo path wired", html.includes("/images/doctor.jpg"));
+  check("clinic photo path wired", html.includes("/images/clinic.jpg"));
+  check("product photo path wired", html.includes("/images/kidney-care-syrup.jpg"));
   check("intro section renders", html.includes("The Science of Life"));
   check("herbs section renders", html.includes("Materia Medica"));
   check("gallery renders", html.includes('id="gallery"'));
   check("hero books via WhatsApp", html.includes("Book an Appointment"));
+} else if (realRoutes.includes(pathname)) {
+  check("real page renders clinic name", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));
+  check("floating WhatsApp link correct (page)", html.includes("https://wa.me/919629907763"));
 } else {
   check("placeholder page renders heading", html.includes("This page is coming next"));
   check("route path shown", html.includes(new URL(url).pathname));
@@ -94,6 +104,8 @@ if (isHome) {
 check("floating WhatsApp link correct", html.includes("https://wa.me/919629907763"));
 check("no fake placeholder phone", !html.includes("00000 00000"));
 check("no fake email shown", !html.includes("hello@example.com"));
+check("no invented clinic timings", !html.includes("9:00 AM"));
+check("no placeholder patient names", !html.includes("[Patient Name]"));
 
 const motion = window.document.documentElement.getAttribute("data-motion");
 check(`data-motion == "${expectMotion}" (got "${motion}")`, motion === expectMotion);

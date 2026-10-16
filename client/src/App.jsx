@@ -4,8 +4,13 @@ import Header from "./components/layout/Header.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import FloatingWhatsApp from "./components/layout/FloatingWhatsApp.jsx";
 import Home from "./pages/Home.jsx";
+import About from "./pages/About.jsx";
+import TreatmentsPage from "./pages/TreatmentsPage.jsx";
+import ProductsPage from "./pages/ProductsPage.jsx";
+import GalleryPage from "./pages/GalleryPage.jsx";
+import FaqsPage from "./pages/FaqsPage.jsx";
+import ContactPage from "./pages/ContactPage.jsx";
 import Placeholder from "./pages/Placeholder.jsx";
-import { nav } from "./data/content.js";
 import { initMotion, watchMotionPreference } from "./lib/motionSettings.js";
 
 /** Instant scroll reset on route change (smooth scrolling would feel odd). */
@@ -25,11 +30,6 @@ export default function App() {
     return watchMotionPreference(() => {});
   }, []);
 
-  const otherRoutes = nav
-    .map((n) => n.to)
-    .filter((to) => to !== "/")
-    .concat(["/testimonials", "/privacy-policy"]);
-
   return (
     <>
       <ScrollToTop />
@@ -39,9 +39,17 @@ export default function App() {
         <div className="page" key={location.pathname}>
           <Routes location={location}>
             <Route path="/" element={<Home />} />
-            {otherRoutes.map((path) => (
-              <Route key={path} path={path} element={<Placeholder />} />
-            ))}
+            <Route path="/about" element={<About />} />
+            <Route path="/treatments" element={<TreatmentsPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/gallery" element={<GalleryPage />} />
+            <Route path="/faqs" element={<FaqsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            {/* Routes awaiting verified content (no invented cases, reviews or
+                legal text) — honest placeholder until supplied. */}
+            <Route path="/case-studies" element={<Placeholder />} />
+            <Route path="/testimonials" element={<Placeholder />} />
+            <Route path="/privacy-policy" element={<Placeholder />} />
             <Route path="*" element={<Placeholder />} />
           </Routes>
         </div>

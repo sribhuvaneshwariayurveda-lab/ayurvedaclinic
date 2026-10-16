@@ -14,7 +14,7 @@ export default function AppointmentCta() {
             label="Appointments"
             title="Request your"
             accent="consultation"
-            desc="Send an enquiry with your preferred date and time. The fastest way to reach us is WhatsApp — our team responds during clinic hours."
+            desc="Send an enquiry with your preferred date and time. The fastest way to reach us is WhatsApp — our team will confirm your slot."
           />
           <Reveal style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1.6rem" }}>
             <a
@@ -32,7 +32,7 @@ export default function AppointmentCta() {
             </a>
           </Reveal>
           <Reveal className="pillar" style={{ maxWidth: 420 }}>
-            <b>Clinic hours</b>
+            <b>Visiting</b>
             {clinic.hours.map((h) => (
               <span key={h.day} style={{ display: "block" }}>
                 {h.day}: {h.time}

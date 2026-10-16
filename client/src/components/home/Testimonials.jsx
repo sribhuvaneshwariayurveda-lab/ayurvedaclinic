@@ -3,6 +3,23 @@ import Reveal from "../ui/Reveal.jsx";
 import SectionHeading from "../ui/SectionHeading.jsx";
 
 export default function Testimonials() {
+  if (!testimonials || testimonials.length === 0) {
+    return (
+      <section className="section section--ivory">
+        <div className="container">
+          <SectionHeading
+            center
+            label="Patient Voices"
+            title="What patients"
+            accent="say"
+          />
+          <p className="quote__note" style={{ textAlign: "center", maxWidth: "56ch", marginInline: "auto" }}>
+            {testimonialsNote}
+          </p>
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="section section--ivory">
       <div className="container">

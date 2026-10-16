@@ -17,8 +17,8 @@ export default function ConsultBand() {
               </span>
             </h2>
             <p className="band__desc">
-              Share your concern and we will guide you to the right consultation. Enquiries are
-              answered during clinic hours.
+              Share your concern and we will guide you to the right consultation. Send an
+              enquiry on WhatsApp and our team will confirm a slot.
             </p>
           </div>
           <div className="band__actions">

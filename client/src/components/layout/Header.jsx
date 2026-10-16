@@ -9,6 +9,7 @@ const sections = [
   { label: "Home", to: "top" },
   { label: "About", to: "about" },
   { label: "Treatments", to: "treatments" },
+  { label: "Products", to: "products" },
   { label: "Gallery", to: "gallery" },
   { label: "Contact", to: "contact" }
 ];
@@ -82,7 +83,7 @@ export default function Header() {
               {clinic.phoneDisplay}
             </a>
             <span className="topbar__meta--hours">
-              {clinic.hours[0].day}: {clinic.hours[0].time}
+              {clinic.hoursNote || "Consultations by appointment"}
             </span>
           </div>
           <a

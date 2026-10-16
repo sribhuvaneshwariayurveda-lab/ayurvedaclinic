@@ -11,8 +11,12 @@ export const clinic = {
   doctor: "Dr. B. Neeraj Kalkin",
   qualifications: "BAMS",
   regNo: "2366/A",
+  university: "Dr. M.G.R. Medical University, Chennai",
+  graduationYear: "2023",
+  experience: "2 years clinical experience",
   phone: "+91 96299 07763",
   phoneDisplay: "+91 96299 07763",
+  bookingLink: "https://wa.me/919629907763",
   email: "",
   whatsapp: "919629907763",
   addressLines: ["87/92A, South Street, Pasupathipalayam", "Karur, Tamil Nadu, India"],
@@ -23,9 +27,11 @@ export const clinic = {
      the site embeds a query-based map of the address above (no coordinates
      are invented or stored). */
   mapsUrl: "https://maps.app.goo.gl/4nWZfsS9LmrFe2pD9",
+  /* No clinic timings were supplied as verified information, so no hours are
+     listed. Consultations are by appointment via WhatsApp. */
+  hoursNote: "Consultations by appointment",
   hours: [
-    { day: "Monday – Saturday", time: "9:00 AM – 7:00 PM" },
-    { day: "Sunday", time: "By appointment" }
+    { day: "Consultations", time: "By appointment via WhatsApp" }
   ],
   mapEmbed: "", // optional full Google Maps embed URL override (see mapsUrl note above)
   socials: {
@@ -50,7 +56,7 @@ export const nav = [
   { label: "Home", to: "/" },
   { label: "About", to: "/about" },
   { label: "Treatments", to: "/treatments" },
-  { label: "Results", to: "/case-studies" },
+  { label: "Products", to: "/products" },
   { label: "Gallery", to: "/gallery" },
   { label: "FAQs", to: "/faqs" },
   { label: "Contact", to: "/contact" }
@@ -88,14 +94,14 @@ export const about = {
   title: "Care rooted in tradition,",
   titleAccent: "guided by evidence.",
   paragraphs: [
-    "Our physician practises classical Ayurveda with a patient-centred approach — beginning every journey with a detailed assessment of constitution (Prakriti), current imbalances (Vikriti) and lifestyle.",
+    "Dr. B. Neeraj Kalkin (BAMS, Reg. No. 2366/A) practises classical Ayurveda with a patient-centred approach — beginning every journey with a detailed assessment of constitution (Prakriti), current imbalances (Vikriti) and lifestyle.",
     "Treatments combine authentic herbal formulations, diet and routine guidance, and traditional therapies where appropriate. Every plan is explained clearly, with honest expectations and no exaggerated promises."
   ],
   credentials: [
     "Bachelor of Ayurvedic Medicine and Surgery (BAMS)",
-    "[State Medical Council / Registration No. — to be supplied]",
-    "Training in Panchakarma & classical therapies",
-    "Continuing education in evidence-based Ayurveda"
+    "Dr. M.G.R. Medical University, Chennai — 2023",
+    "Registered Medical Practitioner — Reg. No. 2366/A",
+    "2 years clinical experience"
   ],
   pillars: [
     { title: "Clinical Philosophy", text: "Honest, individualised treatment designed for long-term balance rather than quick fixes." },
@@ -103,7 +109,17 @@ export const about = {
   ],
   quote: "Every patient deserves care that is effective, ethical and genuinely personal.",
   mediaLabel: "Doctor portrait",
-  mediaLabelSmall: "Clinic consultation room"
+  mediaLabelSmall: "Clinic consultation room",
+  /* Clinic photographs supplied by the clinic, served from /images/.
+     Expected files in client/public/images/:
+       clinic.jpg (clinic exterior — About and Contact sections),
+       doctor.jpg (doctor portrait — Doctor Profile section),
+       kidney-care-syrup.jpg (product display — Products section only).
+     Until each file is present, that slot renders its on-brand fallback. */
+  photos: {
+    doctor: { src: "/images/doctor.jpg", alt: "Portrait of Dr. B. Neeraj Kalkin, BAMS" },
+    clinic: { src: "/images/clinic.jpg", alt: "Exterior of Sri Bhuvaneshwari Ayurveda Peedam, Pasupathipalayam, Karur" }
+  }
 };
 
 export const treatmentCategories = [
@@ -166,23 +182,10 @@ export const why = [
 export const testimonialsNote =
   "Testimonials will be published only with genuine patient consent. No results are guaranteed.";
 
-export const testimonials = [
-  {
-    text: "The consultation was thorough and unhurried. I finally understood my constitution and left with a clear, realistic plan.",
-    name: "[Patient Name]",
-    meta: "Consultation"
-  },
-  {
-    text: "Follow-up support was excellent. The diet guidance was practical and suited my daily routine.",
-    name: "[Patient Name]",
-    meta: "Lifestyle care"
-  },
-  {
-    text: "A calm, professional clinic. The doctor explained everything honestly without over-promising.",
-    name: "[Patient Name]",
-    meta: "Panchakarma"
-  }
-];
+/* No verified patient testimonials have been supplied, so the list stays empty.
+   The Testimonials section renders only the note above until genuine,
+   consented testimonials are provided. */
+export const testimonials = [];
 
 export const faqs = [
   {
@@ -210,7 +213,32 @@ export const faqs = [
 export const contact = {
   label: "Visit Our Clinic",
   title: "Book your consultation",
-  desc: "Share your preferred date and we will help you find a suitable time. Enquiries are answered during clinic hours."
+  desc: "Share your preferred date and we will help you find a suitable time. Send an enquiry on WhatsApp — our team will confirm your slot."
+};
+
+/* --------------------------------------------------------------------------
+   Products — displayed without medical claims.
+   The clinic's product photograph (Kidney Care Syrup) is served from
+   /images/kidney-care-syrup.jpg when the file is present. The copy below
+   describes only that it is a clinic product available on prescription /
+   consultation, with no claim that it cures kidney disease or any other
+   condition, and no contact details copied from any label.
+   -------------------------------------------------------------------------- */
+
+export const products = {
+  label: "Clinic Products",
+  title: "Herbal products",
+  titleAccent: "at the clinic.",
+  desc: "Classical herbal products dispensed at the clinic as part of a doctor-led treatment plan. Ask the physician whether a product is appropriate for you.",
+  items: [
+    {
+      name: "Kidney Care Syrup",
+      tag: "Clinic product",
+      text: "A herbal syrup available at Sri Bhuvaneshwari Ayurveda Peedam. Use only as directed by the physician after consultation.",
+      image: { src: "/images/kidney-care-syrup.jpg", alt: "Kidney Care Syrup — clinic product display" }
+    }
+  ],
+  note: "Products are dispensed after consultation. No product is a substitute for medical advice — follow the physician's directions and do not stop prescribed medication on your own."
 };
 
 /* --------------------------------------------------------------------------

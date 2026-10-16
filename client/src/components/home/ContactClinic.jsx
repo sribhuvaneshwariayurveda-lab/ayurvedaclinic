@@ -1,5 +1,5 @@
-import { clinic, contact } from "../../data/content.js";
-import { IconClock, IconMapPin, IconPhone } from "../ui/Icons.jsx";
+import { clinic, contact, about } from "../../data/content.js";
+import { IconClock, IconMail, IconMapPin, IconPhone } from "../ui/Icons.jsx";
 import Reveal from "../ui/Reveal.jsx";
 import SectionHeading from "../ui/SectionHeading.jsx";
 
@@ -24,6 +24,18 @@ export default function ContactClinic() {
           accent="clinic"
           desc={contact.desc}
         />
+        <figure className="clinic-photo" style={{ marginBottom: "2rem" }}>
+          <img
+            src={about.photos.clinic.src}
+            alt={about.photos.clinic.alt}
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.closest(".clinic-photo")?.classList.add("is-missing");
+              e.currentTarget.remove();
+            }}
+          />
+        </figure>
         <div className="contact__grid">
           <Reveal className="info-card">
             <div className="info-row">
