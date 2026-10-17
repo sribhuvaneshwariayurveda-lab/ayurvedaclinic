@@ -10,6 +10,7 @@
     "dev": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "start": "node server.js",
+    "hash-password": "node scripts/hash-password.mjs",
     "preview": "npm --prefix client run preview",
     "test:smoke": "npm --prefix client run test:smoke"
   }

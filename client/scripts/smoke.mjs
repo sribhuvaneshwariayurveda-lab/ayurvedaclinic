@@ -67,40 +67,54 @@ await new Promise((r) => setTimeout(r, 300));
 const html = window.document.getElementById("root").innerHTML;
 console.log(`\n=== ${label} ===`);
 
-const isHome = new URL(url).pathname === "/";
-const realRoutes = ["/about", "/treatments", "/products", "/gallery", "/faqs", "/contact"];
 const pathname = new URL(url).pathname;
+const isHome = pathname === "/";
+const realRoutes = ["/about", "/treatments", "/products", "/gallery", "/faqs", "/contact"];
+
 if (isHome) {
   check("renders clinic name", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));
   check("renders doctor name", html.includes("Dr. B. Neeraj Kalkin"));
   check("renders BAMS qualification", html.includes("BAMS"));
   check("renders location", html.includes("Pasupathipalayam"));
-  check("treatment cards render", html.includes("Panchakarma Detox"));
-  check("hero heading renders", html.includes("Restoring balance with"));
+  check("counters band renders", html.includes("counters-band"));
+  check("credentials band renders", html.includes("Credentials &amp; Registration") || html.includes("Credentials & Registration"));
+  check("about band renders (brown About Us button)", html.includes("btn--brown") && html.includes("About Us"));
+  check("treatments heading renders", html.includes("Treatments Offered"));
+  check("treatment marquee renders", html.includes("marquee__item") && html.includes("Panchakarma Detox"));
+  check("why grid renders", html.includes("Why Patients Choose Us") && html.includes("why-box"));
+  check("power of ayurveda renders", html.includes("The Power of Ayurveda") && html.includes("power-card"));
+  check("CTA band renders", html.includes("Begin your journey to balance"));
+  check("testimonials note renders", html.includes("genuine patient consent"));
+  check("FAQ renders", html.includes("Frequently Asked Questions"));
   check("appointment form renders", html.includes("Send Enquiry on WhatsApp"));
   check("map directions fallback link", html.includes("google.com/maps"));
   check("exact clinic location link present", html.includes("https://maps.app.goo.gl/4nWZfsS9LmrFe2pD9"));
   check("full street address renders", html.includes("87/92A, South Street"));
-  check("botanical decorative SVG present", html.includes("botanical"));
-  check("hero entrance classes present", html.includes("hero-anim"));
-  check("cinematic hero image present", html.includes("/images/hero-diyo.jpg"));
   check("doctor registration number renders", html.includes("2366/A"));
   check("doctor university renders", html.includes("M.G.R. Medical University"));
-  check("products section renders", html.includes("Kidney Care Syrup"));
   check("doctor photo path wired", html.includes("/images/doctor.jpg"));
   check("clinic photo path wired", html.includes("/images/clinic.jpg"));
+  check("books via WhatsApp", html.includes("Book an Appointment"));
+} else if (pathname === "/admin") {
+  check("admin login page renders (not placeholder)", html.includes("Clinic admin panel"));
+  check("admin sign-in form renders", html.includes("Sign In"));
+  check("not the placeholder page", !html.includes("This page is coming next"));
+  check("no secrets in admin page", !html.includes("ADMIN_PASSWORD") && !html.includes("ADMIN_USERNAME"));
+} else if (pathname === "/gallery") {
+  check("gallery grid renders", html.includes("gallery__grid") && html.includes("gshot"));
+  check("gallery botanical image wired", html.includes("/images/hero-diyo.jpg"));
+  check("gallery credit renders", html.includes("Wikimedia Commons"));
+} else if (pathname === "/products") {
+  check("product card renders", html.includes("Kidney Care Syrup") && html.includes("product-card"));
   check("product photo path wired", html.includes("/images/kidney-care-syrup.jpg"));
-  check("intro section renders", html.includes("The Science of Life"));
-  check("herbs section renders", html.includes("Materia Medica"));
-  check("gallery renders", html.includes('id="gallery"'));
-  check("hero books via WhatsApp", html.includes("Book an Appointment"));
 } else if (realRoutes.includes(pathname)) {
-  check("real page renders clinic name", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));
-  check("floating WhatsApp link correct (page)", html.includes("https://wa.me/919629907763"));
+  check("real page renders (heading band / hero)", html.includes("page-hero"));
+  check("real page renders clinic name (footer)", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));
 } else {
   check("placeholder page renders heading", html.includes("This page is coming next"));
   check("route path shown", html.includes(new URL(url).pathname));
 }
+
 check("floating WhatsApp link correct", html.includes("https://wa.me/919629907763"));
 check("no fake placeholder phone", !html.includes("00000 00000"));
 check("no fake email shown", !html.includes("hello@example.com"));
@@ -111,14 +125,14 @@ const motion = window.document.documentElement.getAttribute("data-motion");
 check(`data-motion == "${expectMotion}" (got "${motion}")`, motion === expectMotion);
 
 const reveals = [...window.document.querySelectorAll(".reveal")];
-check(`reveal elements exist (${reveals.length})`, reveals.length > 0);
+check(`reveal elements exist (${reveals.length})`, pathname === "/admin" ? true : reveals.length > 0);
 check(
   "all reveals marked visible (jsdom has no IntersectionObserver)",
   reveals.every((el) => el.classList.contains("is-visible"))
 );
 
 check("floating WhatsApp button present", !!window.document.querySelector(".wa__btn"));
-check("mobile drawer markup present", !!window.document.querySelector(".drawer"));
+check("offcanvas menu markup present", !!window.document.querySelector(".offcanvas"));
 check("page transition wrapper present", !!window.document.querySelector("main .page"));
 check("no runtime errors", errors.length === 0);
 if (errors.length) console.log("errors:", errors);

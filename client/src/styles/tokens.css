@@ -1,43 +1,76 @@
 /* ==========================================================================
-   Design tokens — Ayurveda Clinic
-   Reference-inspired structure (Jamal Dentistry), re-skinned to an Ayurvedic
-   botanical palette. Original values, not copied assets.
+   Design tokens — Sri Bhuvaneshwari Ayurveda Peedam
+   Reference-matched palette & type (venkataramana-ayurveda.com structure),
+   re-skinned with the clinic's own content. Values are original.
    ========================================================================== */
 :root {
-  /* --- Brand: greens --- */
-  --forest: #1b3a2f;
-  --forest-deep: #122a22;
-  --forest-soft: #2a4a3c;
-  --botanical: #6e8b6b;
-  --botanical-light: #9db39a;
-  --botanical-mist: #dfe7da;
+  /* --- Brand greens --- */
+  --green: #7cc90d;          /* primary heading green */
+  --green-dark: #046820;     /* deep green text */
+  --forest: #144e1f;         /* gradient top */
+  --forest-2: #22351c;       /* gradient bottom */
+  --teal-1: #396f53;         /* diagonal CTA */
+  --teal-2: #144853;
 
-  /* --- Brand: ivories --- */
-  --ivory: #f7f3ea;
-  --ivory-soft: #fbf9f4;
-  --champagne: #f1eadb;
+  /* --- Brand accents --- */
+  --gold-1: #ffcb81;         /* awards gradient top */
+  --gold-2: #000000;         /* awards gradient bottom */
+  --cream: #f3eabf;          /* about band */
+  --mint: #e9ffd3;           /* power band */
+  --mint-2: #ecffe3;         /* treatments band */
+  --mint-soft: #f4f9f7;      /* secondary surface */
+  --footer-green: #75a57c;
+  --maroon: #a0384a;         /* footer pill nav */
+  --brown: #663914;          /* about button */
+  --amber: #e6b66b;          /* nav hover */
+  --pink: #cc3366;           /* call-now label */
 
-  /* --- Accent: restrained gold --- */
-  --gold: #c9a24b;
-  --gold-dark: #a9842f;
-  --gold-light: #e4ce93;
-
-  /* --- Ink --- */
-  --ink: #16201b;
-  --ink-soft: #33413a;
-  --ink-muted: #6b7a72;
-
-  /* --- Surfaces --- */
+  /* --- Neutrals --- */
+  --text: #727272;           /* body copy */
+  --ink: #2d3544;
+  --accent: #283937;
   --white: #ffffff;
-  --line: rgba(27, 58, 47, 0.12);
-  --line-gold: rgba(201, 162, 75, 0.32);
+  --line: rgba(0, 0, 0, 0.1);
+  --line-soft: rgba(255, 255, 255, 0.18);
 
-  /* --- Type --- */
-  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-label: "Cinzel", Georgia, serif;
+  /* --- Type families --- */
+  --font-head: "Roboto Slab", Georgia, serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-accent: "Playfair Display", Georgia, serif;
+  --font-disease: "ADLaM Display", var(--font-head);
+  --font-awards: "BioRhyme", Georgia, serif;
+  --font-cta: "Anton", Impact, sans-serif;
+  --font-sub: "Paprika", Georgia, serif;
+  --font-footer: "Questrial", system-ui, sans-serif;
+  --font-call: "Archivo Black", Impact, sans-serif;
 
-  /* --- Spacing scale --- */
+  /* --- Layout --- */
+  --container: 1140px;
+  --container-narrow: 820px;
+  --banner-h: 290px;
+  --banner-h-sm: 180px;
+
+  /* --- Radius --- */
+  --radius-sm: 8px;
+  --radius: 15px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* --- Elevation --- */
+  --shadow-band: 0 0 10px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lux: 0 20px 50px rgba(20, 78, 31, 0.16);
+
+  /* --- Motion --- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 0.4s;
+
+  /* --- Gradients --- */
+  --grad-green: linear-gradient(180deg, #144e1f 0%, #22351c 100%);
+  --grad-gold: linear-gradient(180deg, #ffcb81 0%, #000000 100%);
+  --grad-diag: linear-gradient(195deg, #396f53 50%, #144853 50%);
+
+  /* --- Spacing scale (kept for compatibility) --- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -47,31 +80,24 @@
   --space-7: 3rem;
   --space-8: 4rem;
   --space-9: 6rem;
-  --space-10: 8rem;
 
-  /* --- Layout --- */
-  --container: 1200px;
-  --container-narrow: 820px;
-  --header-h: 84px;
-
-  /* --- Radius --- */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
-  --radius-pill: 999px;
-
-  /* --- Elevation (mirrors reference luxury-shadow) --- */
-  --shadow-lux: 0 20px 60px rgba(18, 42, 34, 0.08), 0 4px 16px rgba(201, 162, 75, 0.1);
-  --shadow-lux-hover: 0 32px 80px rgba(18, 42, 34, 0.12), 0 8px 24px rgba(201, 162, 75, 0.2);
-  --shadow-soft: 0 12px 30px rgba(18, 42, 34, 0.06);
-
-  /* --- Motion --- */
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --dur: 0.4s;
-
-  /* --- Gradients --- */
-  --grad-gold: linear-gradient(135deg, #c9a24b, #e4ce93, #a9842f);
-  --grad-forest: linear-gradient(160deg, #1b3a2f 0%, #122a22 100%);
+  /* --- Legacy aliases (older components still reference these) --- */
+  --forest-deep: #12331c;
+  --forest-soft: #2a4a3c;
+  --ivory: #fbf9f4;
+  --ivory-soft: #f7f3ea;
+  --gold: #c9a24b;
+  --gold-dark: #a9842f;
+  --gold-light: #e4ce93;
+  --ink-soft: #33413a;
+  --ink-muted: #6b7a72;
+  --botanical: #6e8b6b;
+  --botanical-mist: #dfe7da;
+  --font-serif: var(--font-accent);
+  --font-sans: var(--font-body);
+  --font-label: var(--font-head);
+  --header-h: 96px;
+  --grad-forest: var(--grad-green);
   --grad-ivory: linear-gradient(180deg, #fbf9f4 0%, #f1eadb 100%);
+  --line-gold: rgba(201, 162, 75, 0.32);
 }

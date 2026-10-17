@@ -10,6 +10,7 @@ import ProductsPage from "./pages/ProductsPage.jsx";
 import GalleryPage from "./pages/GalleryPage.jsx";
 import FaqsPage from "./pages/FaqsPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
+import Admin from "./pages/Admin.jsx";
 import Placeholder from "./pages/Placeholder.jsx";
 import { initMotion, watchMotionPreference } from "./lib/motionSettings.js";
 
@@ -45,8 +46,8 @@ export default function App() {
             <Route path="/gallery" element={<GalleryPage />} />
             <Route path="/faqs" element={<FaqsPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            {/* Routes awaiting verified content (no invented cases, reviews or
-                legal text) — honest placeholder until supplied. */}
+            {/* Admin panel (unlinked from public navigation; server-enforced auth). */}
+            <Route path="/admin" element={<Admin />} />
             <Route path="/case-studies" element={<Placeholder />} />
             <Route path="/testimonials" element={<Placeholder />} />
             <Route path="/privacy-policy" element={<Placeholder />} />

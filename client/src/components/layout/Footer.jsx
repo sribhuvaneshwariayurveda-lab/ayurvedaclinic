@@ -1,123 +1,96 @@
 import { Link } from "react-router-dom";
 import { clinic, nav } from "../../data/content.js";
-import {
-  IconFacebook,
-  IconInstagram,
-  IconLeaf,
-  IconMail,
-  IconMapPin,
-  IconPhone,
-  IconYoutube
-} from "../ui/Icons.jsx";
+import { IconLeaf, IconMapPin, IconPhone, IconWhatsApp } from "../ui/Icons.jsx";
+import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
 
 export default function Footer() {
   return (
-    <footer className="footer">
-      <div className="container">
-        <div className="footer__grid">
-          <div>
-            <Link to="/" className="brand">
-              <IconLeaf className="brand__mark" width={40} height={40} style={{ color: "var(--gold-light)" }} />
-              <span className="brand__text">
-                <span className="brand__name">{clinic.name}</span>
-                <span className="brand__tag">{clinic.tagline}</span>
-              </span>
-            </Link>
-            <p className="footer__brand-desc">
-              Doctor-led classical Ayurvedic care — personalised consultations, authentic herbal
-              medicine and traditional therapies.
-            </p>
-            <div className="socials">
-              {clinic.socials.instagram ? (
-                <a href={clinic.socials.instagram} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                  <IconInstagram />
-                </a>
-              ) : (
-                <a href="#" aria-label="Instagram (to be supplied)" onClick={(e) => e.preventDefault()}>
-                  <IconInstagram />
-                </a>
-              )}
-              {clinic.socials.facebook ? (
-                <a href={clinic.socials.facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-                  <IconFacebook />
-                </a>
-              ) : (
-                <a href="#" aria-label="Facebook (to be supplied)" onClick={(e) => e.preventDefault()}>
-                  <IconFacebook />
-                </a>
-              )}
-              {clinic.socials.youtube ? (
-                <a href={clinic.socials.youtube} aria-label="YouTube" target="_blank" rel="noopener noreferrer">
-                  <IconYoutube />
-                </a>
-              ) : (
-                <a href="#" aria-label="YouTube (to be supplied)" onClick={(e) => e.preventDefault()}>
-                  <IconYoutube />
-                </a>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h4>Explore</h4>
-            <div className="footer__links">
-              {nav.map((item) => (
-                <Link key={item.to} to={item.to}>
+    <>
+      <nav className="footer-nav" aria-label="Footer">
+        <div className="container">
+          <ul className="footer-nav__list">
+            {nav.map((item) => (
+              <li key={item.to}>
+                <Link className="footer-nav__link" to={item.to}>
                   {item.label}
                 </Link>
-              ))}
-            </div>
-          </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
 
-          <div>
-            <h4>Care</h4>
-            <div className="footer__links">
-              <Link to="/treatments">Treatments</Link>
-              <Link to="/products">Products</Link>
-              <Link to="/gallery">Gallery</Link>
-              <Link to="/faqs">FAQs</Link>
-              <Link to="/contact">Book Appointment</Link>
-            </div>
-          </div>
-
-          <div>
-            <h4>Visit Us</h4>
-            <div className="footer__links">
-              <span style={{ display: "flex", gap: "0.6rem" }}>
-                <IconMapPin width={17} height={17} style={{ flex: "none", marginTop: 3, color: "var(--gold-light)" }} />
-                <span>{clinic.addressLines.join(", ")}</span>
-              </span>
-              <span style={{ display: "flex", gap: "0.6rem" }}>
-                <IconPhone width={17} height={17} style={{ flex: "none", marginTop: 3, color: "var(--gold-light)" }} />
-                <a href={`tel:${clinic.phone.replace(/\s/g, "")}`}>{clinic.phoneDisplay}</a>
-              </span>
-              {clinic.email ? (
-                <span style={{ display: "flex", gap: "0.6rem" }}>
-                  <IconMail width={17} height={17} style={{ flex: "none", marginTop: 3, color: "var(--gold-light)" }} />
-                  <a href={`mailto:${clinic.email}`}>{clinic.email}</a>
+      <footer className="site-footer">
+        <div className="container">
+          <div className="site-footer__grid">
+            <div>
+              <div className="site-footer__brand">
+                <IconLeaf width={64} height={64} aria-hidden="true" />
+                <span>
+                  <span className="site-footer__clinic">{clinic.name}</span>
                 </span>
-              ) : null}
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.92)", maxWidth: "36ch" }}>
+                Doctor-led classical Ayurvedic care — personalised consultations, authentic herbal
+                medicine and traditional therapies in Karur, Tamil Nadu.
+              </p>
+              <p className="site-footer__since" style={{ marginTop: "0.8rem" }}>
+                {clinic.tagline} · Reg. No. {clinic.regNo}
+              </p>
+            </div>
+
+            <div>
+              <h4>Explore</h4>
+              <div className="site-footer__links">
+                {nav.map((item) => (
+                  <Link key={item.to} to={item.to}>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4>Visit Us</h4>
+              <div className="site-footer__links">
+                <span style={{ display: "flex", gap: "0.6rem" }}>
+                  <IconMapPin width={17} height={17} style={{ flex: "none", marginTop: 4 }} aria-hidden="true" />
+                  <a href={clinic.mapsUrl} target="_blank" rel="noopener noreferrer">
+                    {clinic.addressLines.join(", ")}
+                  </a>
+                </span>
+                <span style={{ display: "flex", gap: "0.6rem" }}>
+                  <IconPhone width={17} height={17} style={{ flex: "none", marginTop: 4 }} aria-hidden="true" />
+                  <a href={`tel:${clinic.phone.replace(/\s/g, "")}`}>{clinic.phoneDisplay}</a>
+                </span>
+                <span style={{ display: "flex", gap: "0.6rem" }}>
+                  <IconWhatsApp width={17} height={17} style={{ flex: "none", marginTop: 4 }} aria-hidden="true" />
+                  <a href={buildWhatsAppLink(generalEnquiryMessage())} target="_blank" rel="noopener noreferrer">
+                    WhatsApp the clinic
+                  </a>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="footer__bottom">
-          <span>
-            &copy; {new Date().getFullYear()} {clinic.name}. All rights reserved.
-          </span>
-          <span className="footer__legal">
-            <Link to="/privacy-policy">Privacy Policy</Link>
-            <Link to="/contact">Contact</Link>
-          </span>
-        </div>
+          <div className="site-footer__bottom">
+            <span>
+              &copy; {new Date().getFullYear()} {clinic.name}. All rights reserved.
+            </span>
+            <span className="site-footer__legal">
+              <Link to="/privacy-policy">Privacy Policy</Link>
+              <Link to="/contact">Contact</Link>
+            </span>
+          </div>
 
-        <p className="footer__credit">
-          Botanical photography: Tulsi garden © Challiyan (CC BY-SA 2.5); Tulsi macro ©
-          Muhammad Mahdi Karim (CC BY-SA 2.5); mortar © Takeaway (CC BY-SA 3.0); Tulsi
-          spike © Vaikoovery (CC BY 3.0); Tulsi sprout © Vengolis (CC BY-SA 4.0); temple
-          lamp © BRPever (CC BY-SA 4.0) — via Wikimedia Commons.
-        </p>
-      </div>
-    </footer>
+          <p className="site-footer__bottom" style={{ borderTop: "none", paddingTop: 0, display: "block", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
+            Botanical photography via Wikimedia Commons: Tulsi garden © Challiyan (CC BY-SA 2.5);
+            Tulsi macro © Muhammad Mahdi Karim (CC BY-SA 2.5); mortar © Takeaway (CC BY-SA 3.0);
+            Tulsi spike © Vaikoovery (CC BY 3.0); Tulsi sprout © Vengolis (CC BY-SA 4.0); temple lamp
+            © BRPever (CC BY-SA 4.0).
+          </p>
+        </div>
+      </footer>
+    </>
   );
 }

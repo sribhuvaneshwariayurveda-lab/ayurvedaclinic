@@ -1,21 +1,17 @@
-import AppointmentCta from "../components/home/AppointmentCta.jsx";
-import ContactClinic from "../components/home/ContactClinic.jsx";
+import { contact } from "../data/content.js";
+import { ContactBand } from "../components/home/HomeSections.jsx";
 
 export default function ContactPage() {
   return (
     <>
       <section className="page-hero">
         <div className="container">
-          <span className="section-label" style={{ color: "var(--gold-light)" }}>Contact</span>
-          <h1>Visit the clinic &amp; book</h1>
-          <p>
-            Find us in Pasupathipalayam, Karur. Send an appointment enquiry through the
-            form or on WhatsApp — our team will confirm your slot.
-          </p>
+          <span className="page-hero__label">{contact.label}</span>
+          <h1>{contact.title}</h1>
+          <p>{contact.desc}</p>
         </div>
       </section>
-      <ContactClinic />
-      <AppointmentCta />
+      <ContactBand />
     </>
   );
 }

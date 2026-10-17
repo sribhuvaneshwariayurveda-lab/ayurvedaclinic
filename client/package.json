@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:smoke": "node scripts/smoke.mjs http://localhost/ full homepage-full && node scripts/smoke.mjs \"http://localhost/?motion=subtle\" subtle homepage-subtle && node scripts/smoke.mjs \"http://localhost/?motion=off\" off homepage-off && node scripts/smoke.mjs http://localhost/about full about-route && node scripts/smoke.mjs http://localhost/treatments full treatments-route && node scripts/smoke.mjs http://localhost/products full products-route && node scripts/smoke.mjs http://localhost/gallery full gallery-route && node scripts/smoke.mjs http://localhost/faqs full faqs-route && node scripts/smoke.mjs http://localhost/contact full contact-route && node scripts/smoke.mjs http://localhost/case-studies full case-studies-route"
+    "test:smoke": "node scripts/smoke.mjs http://localhost/ full homepage-full && node scripts/smoke.mjs \"http://localhost/?motion=subtle\" subtle homepage-subtle && node scripts/smoke.mjs \"http://localhost/?motion=off\" off homepage-off && node scripts/smoke.mjs http://localhost/about full about-route && node scripts/smoke.mjs http://localhost/treatments full treatments-route && node scripts/smoke.mjs http://localhost/products full products-route && node scripts/smoke.mjs http://localhost/gallery full gallery-route && node scripts/smoke.mjs http://localhost/faqs full faqs-route && node scripts/smoke.mjs http://localhost/contact full contact-route && node scripts/smoke.mjs http://localhost/admin full admin-route && node scripts/smoke.mjs http://localhost/case-studies full case-studies-route"
   },
   "dependencies": {
     "framer-motion": "^14.3.0",

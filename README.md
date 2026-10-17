@@ -167,3 +167,55 @@ Google Maps embed (a "Get Directions" search link is shown instead), and all
 photography (on-brand placeholders until real licensed botanical/clinic images
 are supplied to `Media`). No patient data, cure rates, testimonials or
 guaranteed results have been invented.
+
+---
+
+## Admin panel (`/admin`)
+
+Minimal server-side authentication + protected image uploads, built into
+`server.js` (zero new dependencies). The public site is unchanged; when the
+variables below are absent, every `/api/admin/*` endpoint answers `503`.
+
+### Environment variables
+
+| Name | Purpose | Where to set |
+| --- | --- | --- |
+| `ADMIN_USERNAME` | Admin login name (not secret on its own) | Hostinger Node.js app → Environment Variables |
+| `ADMIN_PASSWORD_HASH` | scrypt hash of the admin password (the **only** accepted credential form) | Hostinger Node.js app → Environment Variables |
+| `COOKIE_SECURE` | Set to `1` in production (HTTPS) so the session cookie uses the `Secure` flag; leave unset for local `http` testing | Hostinger Node.js app → Environment Variables |
+
+Existing vars are untouched: `PORT` and `HOST` work exactly as before.
+
+### Creating / changing the password (hash generation)
+
+The password itself is never stored anywhere — only its scrypt hash:
+
+```powershell
+$env:ADMIN_PASSWORD = "use-a-long-random-password-min-16-chars"
+npm run hash-password
+Remove-Item Env:\ADMIN_PASSWORD
+```
+
+Copy **only** the printed `ADMIN_PASSWORD_HASH=...` value into Hostinger's
+environment variables, then restart the app. There is no database to reset and
+no existing accounts to preserve (authentication is env-based, single admin).
+
+### Password reset procedure
+
+A "reset" is simply setting a new password: run the hash command above with a
+new password, replace `ADMIN_PASSWORD_HASH` in Hostinger, restart the app. All
+existing sessions are invalidated on restart; uploaded images in `uploads/`
+are untouched.
+
+### Notes
+
+- Sessions are opaque random tokens in an `HttpOnly; SameSite=Lax` cookie
+  (12-hour expiry, in-memory — a restart signs everyone out).
+- Login is rate-limited (10 attempts / 10 minutes per IP).
+- Uploads accept JPEG/PNG/WebP up to 5 MB with magic-byte verification and
+  are stored with random filenames under `uploads/` (gitignored, served
+  read-only at `/uploads/<name>`). **Uploads must live on persistent storage
+  on the host or they will be lost on redeployment** — confirm Hostinger's
+  persistent volume for the Node.js app before relying on it.
+- Nothing secret appears in frontend code, API responses, logs or git:
+  verify with `git log -p | grep -i admin_password` (empty output expected).
