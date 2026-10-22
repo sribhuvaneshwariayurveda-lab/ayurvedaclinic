@@ -43,8 +43,11 @@ function messageFor(status, data) {
     if (reason === "quoted") {
       return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH is wrapped in quotes. Paste the bare hash value.";
     }
-    if (reason === "not_scrypt" || reason === "malformed") {
-      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH is not a valid scrypt hash (expected $scrypt$N=…,r=…,p=…$<salt>$<hash>).";
+    if (reason === "not_scrypt") {
+      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH is not an scrypt hash from this app. It must begin with $scrypt$; a bcrypt, argon2, SHA-256 or plain-text value will not work. Regenerate it with npm run hash-password.";
+    }
+    if (reason === "malformed") {
+      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH begins with $scrypt$ but does not match the expected form $scrypt$N=…,r=…,p=…$<saltHex>$<hashHex>. Regenerate it with npm run hash-password.";
     }
     if (reason === "short_salt" || reason === "short_hash" || reason === "weak_params" || reason === "unsafe_params") {
       return "Server admin credential is misconfigured: the stored hash is incomplete or uses unsafe parameters. It has to be regenerated with npm run hash-password.";

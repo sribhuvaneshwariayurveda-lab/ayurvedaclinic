@@ -78,6 +78,16 @@ export function verifyHash(password, stored) {
 }
 
 /**
+ * A short label derived from the stored hash, used to confirm that a
+ * restarted app actually loaded the value you just pasted. It changes
+ * whenever the hash changes and reveals nothing useful about the secret.
+ * Mirrors adminHashFingerprint() in server.js.
+ */
+export function configFingerprint(stored) {
+  return crypto.createHash("sha256").update(String(stored || "")).digest("hex").slice(0, 8);
+}
+
+/**
  * Classify a misconfigured value.
  *
  * Returns a short reason code, or null when the value is usable.

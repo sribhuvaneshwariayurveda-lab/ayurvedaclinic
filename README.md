@@ -181,30 +181,50 @@ variables below are absent, every `/api/admin/*` endpoint answers `503`.
 | Name | Purpose | Where to set |
 | --- | --- | --- |
 | `ADMIN_USERNAME` | Admin login name (not secret on its own) | Hostinger Node.js app → Environment Variables |
-| `ADMIN_PASSWORD_HASH` | scrypt hash of the admin password (the **only** accepted credential form) | Hostinger Node.js app → Environment Variables |
+| `ADMIN_PASSWORD` | Plain-text admin password. The server derives an scrypt hash at startup with a random salt, then removes the variable from its own environment | Hostinger Node.js app → Environment Variables |
+| `ADMIN_PASSWORD_HASH` | Optional pre-computed scrypt hash. When present and valid it takes precedence over `ADMIN_PASSWORD` (kept for compatibility) | Hostinger Node.js app → Environment Variables |
 | `COOKIE_SECURE` | Set to `1` in production (HTTPS) so the session cookie uses the `Secure` flag; leave unset for local `http` testing | Hostinger Node.js app → Environment Variables |
 
 Existing vars are untouched: `PORT` and `HOST` work exactly as before.
 
-### Creating / changing the password (hash generation)
+### Credential precedence
 
-The password itself is never stored anywhere — only its scrypt hash. The
-hash uses a cryptographically secure random 16-byte salt and
-`N=16384, r=8, p=1`:
+1. A valid `ADMIN_PASSWORD_HASH` wins.
+2. Otherwise `ADMIN_PASSWORD` is used. If a hash is present but unusable, it
+   is ignored (with a clear startup warning) and the password is used.
+3. With neither set, the admin API fails closed with `503 config_missing` and
+   the startup log says exactly what to set.
+
+### Creating / changing the password
+
+The simplest option — and the recommended one for Hostinger — is to set
+`ADMIN_PASSWORD` to the password itself. Nothing needs to be generated or
+copied. At startup the server hashes it with a cryptographically secure random
+16-byte salt and `N=16384, r=8, p=1`, keeps only that hash in memory, and
+deletes the plain-text variable from its own environment. Passwords are still
+verified in constant time by `crypto.timingSafeEqual`, and the plain text is
+never logged, returned or written to disk.
+
+A pre-computed `ADMIN_PASSWORD_HASH` is still supported. It uses the same
+format and is generated with:
+
+```powershell
+npm run hash-password
+```
+
+Type the admin password when prompted — the input is hidden and never enters
+your shell history. The command prints **only the hash value** on stdout (no
+variable name, no quotes, no trailing newline), plus the format and a short
+**config fingerprint** on stderr. The password is never accepted as a command
+line argument and is never written to disk.
+
+For non-interactive use (CI), set it in the environment instead and clear it
+afterwards:
 
 ```powershell
 $env:ADMIN_PASSWORD = "use-a-long-random-password-min-16-chars"
 npm run hash-password
 Remove-Item Env:\ADMIN_PASSWORD
-```
-
-`npm run hash-password` prints **only the hash value** on stdout (no variable
-name, no quotes, no trailing newline) and the instructions on stderr, so the
-value can be piped or copied straight into the host's env panel. To type the
-password without echoing it into your shell history instead:
-
-```powershell
-npm run hash-password -- --prompt
 ```
 
 The value looks like this (the salt and key change every run):
@@ -215,45 +235,62 @@ $scrypt$N=16384,r=8,p=1$1f3c…$9ab2…
 
 ### Configuring it in Hostinger
 
-1. Generate the hash locally (above).
-2. Open **Hostinger → Advanced → Node.js → your app → Environment Variables**.
-3. Add `ADMIN_USERNAME` — the login name you type on the `/admin` sign-in
+Option A — plain password (recommended):
+
+1. Open **Hostinger → Advanced → Node.js → your app → Environment Variables**.
+2. Add `ADMIN_USERNAME` — the login name you type on the `/admin` sign-in
    screen (plain text, not a secret).
-4. Add `ADMIN_PASSWORD_HASH` — paste **only** the hash value. The field must
+3. Add `ADMIN_PASSWORD` — your admin password, entered as the value.
+4. Add `COOKIE_SECURE` = `1` (the site is served over HTTPS).
+5. **Restart the application.** The variables are read once, at startup. A
+   rebuild is **not** required: `server.js` runs directly from the repository
+   and is not bundled.
+6. The startup log confirms
+   `ADMIN_PASSWORD accepted — in-memory scrypt hash derived with a random salt`.
+
+Option B — pre-computed hash (compatibility):
+
+1. Generate the hash locally (above).
+2. Add `ADMIN_USERNAME`.
+3. Add `ADMIN_PASSWORD_HASH` — paste **only** the hash value. The field must
    hold exactly `$scrypt$N=…,r=…,p=…$<salt>$<hash>`:
    - do **not** include the `ADMIN_PASSWORD_HASH=` prefix,
    - do **not** wrap the value in quotes,
    - do **not** leave a trailing space or newline.
-5. Add `COOKIE_SECURE` = `1` (the site is served over HTTPS).
-6. **Restart the application.** The variables are read once, at startup, so a
-   redeploy/restart is required before the new value takes effect.
+4. Add `COOKIE_SECURE` = `1`.
+5. **Restart the application** (no rebuild needed).
+6. **Confirm the restart loaded the new value.** The app startup log prints
+   `config fingerprint <8 hex>`; it must match the fingerprint printed by
+   `npm run hash-password`. A different fingerprint means the old value is
+   still loaded — restart again.
 
-Check a value locally before pasting it:
+Check a configuration locally before pasting it:
 
 ```powershell
 $env:ADMIN_USERNAME = "your-admin-name"
-$env:ADMIN_PASSWORD_HASH = "<the value you are about to paste>"
+$env:ADMIN_PASSWORD = "your-admin-password"
 npm run check-admin-config
-Remove-Item Env:\ADMIN_PASSWORD_HASH
+Remove-Item Env:\ADMIN_PASSWORD
 ```
 
-The checker prints only the shape of the value and the reason when something
-is wrong — never the value itself. If the admin panel shows *"Admin panel is
+Or set `$env:ADMIN_PASSWORD_HASH` instead of `ADMIN_PASSWORD`. The checker
+prints only presence, the hash shape, a short fingerprint and the reason when
+something is wrong — never a secret. If the admin panel shows *"Admin panel is
 not configured"* (`503 config_missing`) or *"Admin credential is
 misconfigured"* (`503 config_invalid`), read the server startup log: it names
 the exact problem (`prefixed`, `whitespace`, `quoted`, `not_scrypt`,
-`malformed`, `short_salt`, `short_hash`, `weak_params`) without revealing the
-credential.
+`malformed`, `short_salt`, `short_hash`, `weak_params`, `unsafe_params`)
+without revealing the credential.
 
 There is no database to reset and no existing accounts to preserve
 (authentication is env-based, single admin).
 
 ### Password reset procedure
 
-A "reset" is simply setting a new password: run the hash command above with a
-new password, replace `ADMIN_PASSWORD_HASH` in Hostinger, restart the app. All
-existing sessions are invalidated on restart; uploaded images in `uploads/`
-are untouched.
+A "reset" is simply setting a new password: either change `ADMIN_PASSWORD` in
+Hostinger, or generate a new hash for `ADMIN_PASSWORD_HASH`, then restart the
+app (no rebuild). All existing sessions are invalidated on restart; uploaded
+images in `uploads/` are untouched.
 
 ### Notes
 

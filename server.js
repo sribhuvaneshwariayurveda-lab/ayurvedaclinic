@@ -11,8 +11,10 @@
  * set, all /api/admin/* endpoints answer 503 and nothing else changes.
  *
  * Admin credentials are NEVER hardcoded here and never leave the server:
- * the password hash comes from ADMIN_PASSWORD_HASH, sessions are opaque
- * random tokens in an HttpOnly cookie, and no secret is logged or returned.
+ * the credential comes from ADMIN_PASSWORD_HASH (scrypt) or from a plain-text
+ * ADMIN_PASSWORD that is hashed in memory at startup with a random salt.
+ * Sessions are opaque random tokens in an HttpOnly cookie, and no secret is
+ * logged or returned.
  */
 const http = require("node:http");
 const fs = require("node:fs");
@@ -78,17 +80,27 @@ function notFound(res) {
  *
  * Environment (production secrets live ONLY in the host's env panel):
  *   ADMIN_USERNAME       admin login name (plain text, not secret)
- *   ADMIN_PASSWORD_HASH  scrypt hash from `npm run hash-password`
+ *   ADMIN_PASSWORD       plain-text admin password. When set, the server
+ *                        derives an scrypt hash at startup using a fresh
+ *                        cryptographically random salt, then removes the
+ *                        variable from its own environment. No hash needs to
+ *                        be generated or copied by hand.
+ *   ADMIN_PASSWORD_HASH  optional pre-computed scrypt hash from
+ *                        `npm run hash-password`
  *                        format: $scrypt$N=<n>,r=<r>,p=<p>$<saltHex>$<hashHex>
  *                        paste the VALUE ONLY — no variable name, no quotes,
  *                        no leading/trailing whitespace or newline
+ *   If both are set, a valid ADMIN_PASSWORD_HASH takes precedence. If the
+ *   hash is present but unusable, ADMIN_PASSWORD is used instead. With
+ *   neither set the admin API fails closed with 503.
  *   COOKIE_SECURE       set to "1" in production (HTTPS) so the session
  *                        cookie carries the Secure flag; leave unset for
  *                        local http testing.
  *
  * These variables are read once, at startup: restart the application after
- * changing them. Run `npm run check-admin-config` to validate a value
- * locally before pasting it into the host's env panel.
+ * changing them (no rebuild is needed — server.js is not bundled). Run
+ * `npm run check-admin-config` to validate a value locally before pasting it
+ * into the host's env panel.
  *
  * Endpoints (all JSON except the served upload files):
  *   POST   /api/admin/login    {username, password} -> sets session cookie
@@ -101,7 +113,8 @@ function notFound(res) {
  * ------------------------------------------------------------------------- */
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
+let ADMIN_PASSWORD_HASH = "";
+let ADMIN_CONFIG = null;
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 const DATA_DIR = path.join(__dirname, "data");
@@ -166,6 +179,16 @@ const SALT_HEX_LENGTH = 32; // 16 bytes
 const KEY_HEX_LENGTH = 128; // 64 bytes
 
 /**
+ * Short label derived from the stored hash (first 8 hex of SHA-256). It lets
+ * an administrator confirm that a restarted app loaded the value they just
+ * pasted, without revealing the hash. Mirrors configFingerprint() in
+ * scripts/password-hash.mjs.
+ */
+function adminHashFingerprint(stored) {
+  return crypto.createHash("sha256").update(String(stored || "")).digest("hex").slice(0, 8);
+}
+
+/**
  * Classify the ADMIN_PASSWORD_HASH value without revealing any of it.
  * Returns a short reason code, or null when the value is usable.
  * The reason never contains any part of the credential itself.
@@ -207,27 +230,129 @@ const ADMIN_HASH_PROBLEMS = {
     "ADMIN_PASSWORD_HASH uses an scrypt cost above the accepted ceiling — regenerate it with `npm run hash-password`.",
 };
 
+/** Passwords shorter than this are accepted but flagged in the startup log. */
+const MIN_ADMIN_PASSWORD_LENGTH = 16;
+
 /**
- * Validate the admin configuration.
- * Returns { ok, code, reason, message } where `code` is the API error code
- * ("config_missing" / "config_invalid"), `reason` is a short non-sensitive
- * diagnostic and `message` explains the fix. No credential material is
- * included in the result.
+ * Derive the in-memory scrypt hash for ADMIN_PASSWORD.
+ * A fresh cryptographically secure salt is used; the plain text is never
+ * stored, logged or compared directly. The output uses the same format as
+ * `npm run hash-password`, so verification below is unchanged.
  */
-function validateAdminConfig() {
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD_HASH) {
+function derivePasswordHash(password) {
+  const salt = crypto.randomBytes(SALT_HEX_LENGTH / 2).toString("hex");
+  const key = crypto.scryptSync(password, Buffer.from(salt, "hex"), KEY_HEX_LENGTH / 2, { ...SCRYPT_MIN });
+  return `$scrypt$N=${SCRYPT_MIN.N},r=${SCRYPT_MIN.r},p=${SCRYPT_MIN.p}$${salt}$${key.toString("hex")}`;
+}
+
+/**
+ * Resolve the admin credential once, at startup.
+ *
+ * Precedence:
+ *   1. ADMIN_PASSWORD_HASH when present and valid.
+ *   2. ADMIN_PASSWORD — hashed in memory right now with a random salt; the
+ *      plain-text variable is removed from the process environment afterwards.
+ *   3. Neither -> config_missing. An unusable hash with no password ->
+ *      config_invalid. Both fail closed (every admin endpoint answers 503).
+ *
+ * Returns { ok, code, reason, message, source, hash, ignoredHashReason,
+ *           passwordTooShort }. Credential material is never included in the
+ * result or in any message.
+ */
+function resolveAdminConfig() {
+  const rawHash = process.env.ADMIN_PASSWORD_HASH || "";
+  const rawPassword = process.env.ADMIN_PASSWORD || "";
+  let hash = "";
+  let source = null;
+  let ignoredHashReason = null;
+
+  try {
+    if (rawHash) {
+      const hashProblem = describeAdminHashProblem(rawHash);
+      if (!hashProblem) {
+        hash = rawHash;
+        source = "hash";
+      } else if (rawPassword) {
+        /* A mistyped hash must not lock out an admin who also set a password. */
+        ignoredHashReason = hashProblem;
+      } else {
+        return {
+          ok: false,
+          code: "config_invalid",
+          reason: hashProblem,
+          message: ADMIN_HASH_PROBLEMS[hashProblem],
+          source: null,
+          hash: "",
+          ignoredHashReason: null,
+          passwordTooShort: false,
+        };
+      }
+    }
+
+    if (!hash && rawPassword) {
+      try {
+        hash = derivePasswordHash(rawPassword);
+        source = "password";
+      } catch (e) {
+        return {
+          ok: false,
+          code: "config_invalid",
+          reason: "derive_failed",
+          message: "ADMIN_PASSWORD could not be hashed at startup — use a shorter password or set ADMIN_PASSWORD_HASH.",
+          source: null,
+          hash: "",
+          ignoredHashReason: null,
+          passwordTooShort: false,
+        };
+      }
+    }
+  } finally {
+    /* Do not keep the plain-text secret in the process environment. */
+    delete process.env.ADMIN_PASSWORD;
+  }
+
+  if (!ADMIN_USERNAME) {
     return {
       ok: false,
       code: "config_missing",
-      reason: "missing",
-      message: "ADMIN_USERNAME and ADMIN_PASSWORD_HASH must both be set in the environment.",
+      reason: "missing_username",
+      message: "ADMIN_USERNAME is not set — set the admin login name.",
+      source: null,
+      hash: "",
+      ignoredHashReason: null,
+      passwordTooShort: false,
     };
   }
-  const reason = describeAdminHashProblem(ADMIN_PASSWORD_HASH);
-  if (reason) {
-    return { ok: false, code: "config_invalid", reason, message: ADMIN_HASH_PROBLEMS[reason] };
+
+  if (!hash) {
+    return {
+      ok: false,
+      code: "config_missing",
+      reason: "missing_password",
+      message:
+        "Neither ADMIN_PASSWORD nor ADMIN_PASSWORD_HASH is set — set ADMIN_PASSWORD to the admin password (the server hashes it at startup).",
+      source: null,
+      hash: "",
+      ignoredHashReason: null,
+      passwordTooShort: false,
+    };
   }
-  return { ok: true, code: null, reason: null, message: null };
+
+  return {
+    ok: true,
+    code: null,
+    reason: null,
+    message: null,
+    source,
+    hash,
+    ignoredHashReason,
+    passwordTooShort: source === "password" && rawPassword.length < MIN_ADMIN_PASSWORD_LENGTH,
+  };
+}
+
+/** Cached startup configuration (resolved once, before the server listens). */
+function validateAdminConfig() {
+  return ADMIN_CONFIG;
 }
 
 /* Startup diagnostics — presence, shape and flags only. Never prints values. */
@@ -235,16 +360,43 @@ function logAdminConfig() {
   const tag = "[ayurveda-clinic] admin";
   const config = validateAdminConfig();
   if (config.code === "config_missing") {
-    console.warn(`${tag}: DISABLED — set ADMIN_USERNAME and ADMIN_PASSWORD_HASH. Admin API answers 503.`);
+    console.warn(
+      `${tag}: DISABLED — set ADMIN_USERNAME and ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH). Admin API answers 503.`
+    );
     console.warn(`${tag}: environment variables are read at startup — restart the application after changing them.`);
     return;
   }
-  console.log(`${tag}: enabled — reading ADMIN_USERNAME + ADMIN_PASSWORD_HASH from the environment.`);
+  console.log(
+    `${tag}: enabled — using ${
+      config.source === "password" ? "ADMIN_PASSWORD (hashed in memory at startup)" : "ADMIN_PASSWORD_HASH"
+    } from the environment.`
+  );
   if (ADMIN_USERNAME !== ADMIN_USERNAME.trim()) {
     console.warn(`${tag}: ADMIN_USERNAME has leading/trailing whitespace — remove it or logins will fail.`);
   }
+  if (config.ignoredHashReason) {
+    console.warn(
+      `${tag}: ADMIN_PASSWORD_HASH is not usable (${config.ignoredHashReason}) — ignoring it and using ADMIN_PASSWORD instead.`
+    );
+  }
   if (config.ok) {
-    console.log(`${tag}: ADMIN_PASSWORD_HASH format OK (scrypt).`);
+    if (config.source === "hash") {
+      console.log(
+        `${tag}: ADMIN_PASSWORD_HASH format OK (scrypt), config fingerprint ${adminHashFingerprint(ADMIN_PASSWORD_HASH)}.`
+      );
+      console.log(
+        `${tag}: that fingerprint must match the one printed by \`npm run check-admin-config\`; if it does not, the old value is still loaded.`
+      );
+    } else {
+      console.log(
+        `${tag}: ADMIN_PASSWORD accepted — in-memory scrypt hash derived with a random salt; the plain-text password is not stored or logged.`
+      );
+      if (config.passwordTooShort) {
+        console.warn(
+          `${tag}: note — ADMIN_PASSWORD is shorter than ${MIN_ADMIN_PASSWORD_LENGTH} characters; a longer password is safer.`
+        );
+      }
+    }
   } else {
     console.warn(`${tag}: ${config.message}`);
     console.warn(`${tag}: the admin API answers 503 (config_invalid) until this is fixed.`);
@@ -252,6 +404,11 @@ function logAdminConfig() {
   console.log(`${tag}: COOKIE_SECURE ${COOKIE_SECURE ? "=1 (session cookie is Secure; requires HTTPS)" : "unset (session cookie is not Secure — set =1 in production HTTPS)"}.`);
   console.log(`${tag}: environment variables are read at startup — restart the application after changing them.`);
 }
+
+/* Resolve the credential once, before any request can arrive. */
+ADMIN_CONFIG = resolveAdminConfig();
+ADMIN_PASSWORD_HASH = ADMIN_CONFIG.hash || "";
+
 
 function scryptAsync(password, saltHex, opts) {
   return new Promise((resolve, reject) => {
