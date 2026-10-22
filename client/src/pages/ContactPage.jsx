@@ -1,7 +1,8 @@
-import { contact } from "../data/content.js";
+import { useContentSection } from "../data/store.js";
 import { ContactBand } from "../components/home/HomeSections.jsx";
 
 export default function ContactPage() {
+  const contact = useContentSection("contact");
   return (
     <>
       <section className="page-hero">

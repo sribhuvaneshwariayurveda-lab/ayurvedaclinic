@@ -99,6 +99,9 @@ const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
 const ADMIN_ENABLED = Boolean(ADMIN_USERNAME && ADMIN_PASSWORD_HASH);
 const UPLOADS_DIR = path.join(__dirname, "uploads");
+const DATA_DIR = path.join(__dirname, "data");
+const CONTENT_FILE = path.join(DATA_DIR, "content.json");
+const MAX_CONTENT_BYTES = 512 * 1024;
 const SESSION_COOKIE = "sbap_admin";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -113,6 +116,12 @@ try {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 } catch (e) {
   console.error(`[ayurveda-clinic] cannot create uploads dir: ${e.message}`);
+}
+
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch (e) {
+  console.error(`[ayurveda-clinic] cannot create data dir: ${e.message}`);
 }
 
 setInterval(() => {
@@ -141,6 +150,31 @@ function parsePasswordHash(stored) {
   const m = /^\$scrypt\$N=(\d+),r=(\d+),p=(\d+)\$([0-9a-f]+)\$([0-9a-f]+)$/.exec(stored || "");
   if (!m) return null;
   return { N: Number(m[1]), r: Number(m[2]), p: Number(m[3]), salt: m[4], hash: m[5] };
+}
+
+/* Startup diagnostics — presence, shape and flags only. Never prints values. */
+function logAdminConfig() {
+  const tag = "[ayurveda-clinic] admin";
+  if (!ADMIN_ENABLED) {
+    console.warn(`${tag}: DISABLED — set ADMIN_USERNAME and ADMIN_PASSWORD_HASH. Admin API answers 503.`);
+    return;
+  }
+  console.log(`${tag}: enabled — reading ADMIN_USERNAME + ADMIN_PASSWORD_HASH from the environment.`);
+  if (ADMIN_USERNAME !== ADMIN_USERNAME.trim()) {
+    console.warn(`${tag}: ADMIN_USERNAME has leading/trailing whitespace — remove it or logins will fail.`);
+  }
+  if (ADMIN_PASSWORD_HASH !== ADMIN_PASSWORD_HASH.trim()) {
+    console.warn(`${tag}: ADMIN_PASSWORD_HASH has leading/trailing whitespace/newline — remove it or logins will fail.`);
+  }
+  if (ADMIN_PASSWORD_HASH.startsWith("ADMIN_PASSWORD_HASH=")) {
+    console.warn(`${tag}: ADMIN_PASSWORD_HASH starts with "ADMIN_PASSWORD_HASH=" — paste ONLY the value that begins with "$scrypt$".`);
+  }
+  if (parsePasswordHash(ADMIN_PASSWORD_HASH)) {
+    console.log(`${tag}: ADMIN_PASSWORD_HASH format OK (scrypt).`);
+  } else {
+    console.warn(`${tag}: ADMIN_PASSWORD_HASH is malformed — expected "$scrypt$N=16384,r=8,p=1$<saltHex>$<hashHex>". Logins will fail until fixed.`);
+  }
+  console.log(`${tag}: COOKIE_SECURE ${COOKIE_SECURE ? "=1 (session cookie is Secure; requires HTTPS)" : "unset (cookie not Secure — set =1 in production HTTPS)"}.`);
 }
 
 function scryptAsync(password, saltHex, opts) {
@@ -266,46 +300,90 @@ function magicMatches(buf, ext) {
   return false;
 }
 
+/**
+ * Read the admin-managed content document.
+ * Returns {} when the file is missing, unreadable or not a JSON object — the
+ * client then falls back to the copy bundled with the site.
+ */
+async function readContentDoc() {
+  try {
+    const raw = await fs.promises.readFile(CONTENT_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+/** Write the content document atomically (temp file, then rename). */
+async function writeContentDoc(doc) {
+  await fs.promises.mkdir(DATA_DIR, { recursive: true });
+  const tmp = `${CONTENT_FILE}.${process.pid}.tmp`;
+  await fs.promises.writeFile(tmp, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  await fs.promises.rename(tmp, CONTENT_FILE);
+}
+
+/**
+ * Public, read-only access to the admin-managed content document.
+ * Always available (it does not depend on the admin account being set up) so
+ * the site can read its content from a plain `npm start` deployment.
+ */
+async function handleContent(req, res) {
+  const doc = await readContentDoc();
+  sendJson(res, 200, doc, { "Cache-Control": "no-cache" });
+}
+
 async function handleAdmin(req, res, pathname) {
   if (!ADMIN_ENABLED) {
-    sendJson(res, 503, { error: "Admin panel is not configured on this server." });
+    sendJson(res, 503, { error: "Admin panel is not configured on this server.", code: "config_missing" });
+    return;
+  }
+  if (!parsePasswordHash(ADMIN_PASSWORD_HASH)) {
+    sendJson(res, 503, { error: "Admin credential is misconfigured on the server.", code: "config_invalid" });
     return;
   }
   const sub = pathname === "/api/admin" ? "/" : pathname.slice("/api/admin".length);
 
   if (req.method === "POST" && sub === "/login") {
     if (badOrigin(req)) {
-      sendJson(res, 403, { error: "Forbidden." });
+      console.warn("[ayurveda-clinic] admin: login rejected — Origin/Referer host does not match Host header.");
+      sendJson(res, 403, { error: "Forbidden.", code: "origin_rejected" });
       return;
     }
     const ip = clientIp(req);
     if (loginBlocked(ip)) {
-      sendJson(res, 429, { error: "Too many attempts. Try again later." }, { "Retry-After": "600" });
+      sendJson(res, 429, { error: "Too many attempts. Try again later.", code: "rate_limited" }, { "Retry-After": "600" });
       return;
     }
     let body;
     try {
       body = await readBody(req, 10 * 1024);
     } catch (e) {
-      sendJson(res, 413, { error: "Request too large." });
+      sendJson(res, 413, { error: "Request too large.", code: "request_too_large" });
       return;
     }
     let creds;
     try {
       creds = JSON.parse(body.toString("utf8"));
     } catch (e) {
-      sendJson(res, 400, { error: "Invalid request." });
+      sendJson(res, 400, { error: "Invalid request.", code: "invalid_request" });
       return;
     }
     const okUser = typeof creds.username === "string" && creds.username === ADMIN_USERNAME;
     const okPass = await verifyPassword(creds.password, ADMIN_PASSWORD_HASH);
     if (!okUser || !okPass) {
       recordFailedLogin(ip);
+      console.warn(`[ayurveda-clinic] admin: login rejected — ${okUser ? "wrong password" : "unknown username"}.`);
       // Deliberately identical response for unknown user vs wrong password.
-      sendJson(res, 401, { error: "Invalid username or password." });
+      sendJson(res, 401, { error: "Invalid username or password.", code: "invalid_credentials" });
       return;
     }
     loginAttempts.delete(ip);
+    // Safe cookie diagnostic: a Secure cookie is dropped by browsers over http.
+    const proto = req.headers["x-forwarded-proto"] || (req.socket.encrypted ? "https" : "http");
+    if (COOKIE_SECURE && proto !== "https") {
+      console.warn("[ayurveda-clinic] admin: COOKIE_SECURE=1 but request was not HTTPS — browsers will drop the session cookie (login won't persist).");
+    }
     const token = crypto.randomBytes(32).toString("hex");
     sessions.set(token, { username: ADMIN_USERNAME, expires: Date.now() + SESSION_TTL_MS });
     sendJson(
@@ -327,17 +405,67 @@ async function handleAdmin(req, res, pathname) {
   if (req.method === "GET" && sub === "/session") {
     const s = getSession(req);
     if (!s) {
-      sendJson(res, 401, { authenticated: false }, { "Cache-Control": "no-store" });
+      sendJson(res, 401, { authenticated: false, code: "no_session" }, { "Cache-Control": "no-store" });
       return;
     }
     sendJson(res, 200, { authenticated: true, username: s.username }, { "Cache-Control": "no-store" });
     return;
   }
 
+  /* -------------------------------------------------------------------------
+   * Content document (admin-managed About / Products / Diseases copy).
+   *   GET /api/admin/content -> the stored document ({} when nothing saved)
+   *   PUT /api/admin/content -> merge the supplied top-level sections into
+   *                              the stored document and persist it
+   * ---------------------------------------------------------------------- */
+  if (sub === "/content" && (req.method === "GET" || req.method === "PUT")) {
+    const s = getSession(req);
+    if (!s) {
+      sendJson(res, 401, { error: "Not authenticated.", code: "no_session" });
+      return;
+    }
+    if (req.method === "GET") {
+      sendJson(res, 200, await readContentDoc(), { "Cache-Control": "no-store" });
+      return;
+    }
+    if (badOrigin(req)) {
+      sendJson(res, 403, { error: "Forbidden.", code: "origin_rejected" });
+      return;
+    }
+    let body;
+    try {
+      body = await readBody(req, MAX_CONTENT_BYTES);
+    } catch (e) {
+      sendJson(res, 413, { error: "Content document is too large.", code: "request_too_large" });
+      return;
+    }
+    let patch;
+    try {
+      patch = JSON.parse(body.toString("utf8"));
+    } catch (e) {
+      sendJson(res, 400, { error: "Invalid content document.", code: "invalid_request" });
+      return;
+    }
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+      sendJson(res, 400, { error: "Invalid content document.", code: "invalid_request" });
+      return;
+    }
+    const next = { ...(await readContentDoc()), ...patch };
+    try {
+      await writeContentDoc(next);
+    } catch (e) {
+      console.error(`[ayurveda-clinic] admin: could not write content document: ${e.message}`);
+      sendJson(res, 500, { error: "Could not save the content document." });
+      return;
+    }
+    sendJson(res, 200, { ok: true, content: next }, { "Cache-Control": "no-store" });
+    return;
+  }
+
   if (req.method === "GET" && sub === "/uploads") {
     const s = getSession(req);
     if (!s) {
-      sendJson(res, 401, { error: "Not authenticated." });
+      sendJson(res, 401, { error: "Not authenticated.", code: "no_session" });
       return;
     }
     let names = [];
@@ -364,7 +492,7 @@ async function handleAdmin(req, res, pathname) {
   if (req.method === "POST" && sub === "/uploads") {
     const s = getSession(req);
     if (!s) {
-      sendJson(res, 401, { error: "Not authenticated." });
+      sendJson(res, 401, { error: "Not authenticated.", code: "no_session" });
       return;
     }
     if (badOrigin(req)) {
@@ -406,7 +534,7 @@ async function handleAdmin(req, res, pathname) {
   if (req.method === "DELETE" && sub.startsWith("/uploads/")) {
     const s = getSession(req);
     if (!s) {
-      sendJson(res, 401, { error: "Not authenticated." });
+      sendJson(res, 401, { error: "Not authenticated.", code: "no_session" });
       return;
     }
     if (badOrigin(req)) {
@@ -474,6 +602,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Public read-only content document (the admin-managed site copy).
+  if (pathname === "/api/content") {
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      res.writeHead(405, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    handleContent(req, res).catch((err) => {
+      console.error(`[ayurveda-clinic] content error: ${err.message}`);
+      sendJson(res, 500, { error: "Internal error." });
+    });
+    return;
+  }
+
   // Admin API (server-side authenticated; 503 when not configured).
   if (pathname === "/api/admin" || pathname.startsWith("/api/admin/")) {
     handleAdmin(req, res, pathname).catch((err) => {
@@ -533,5 +675,5 @@ server.on("error", (err) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`[ayurveda-clinic] serving ${DIST_DIR} at http://${HOST}:${PORT}`);
-  console.log(`[ayurveda-clinic] admin api: ${ADMIN_ENABLED ? "configured" : "not configured (set ADMIN_USERNAME + ADMIN_PASSWORD_HASH)"}`);
+  logAdminConfig();
 });

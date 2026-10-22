@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { treatments } from "../data/content.js";
+import { useContentSection } from "../data/store.js";
 import { IconWhatsApp } from "../components/ui/Icons.jsx";
 import Media from "../components/ui/Media.jsx";
 import Reveal from "../components/ui/Reveal.jsx";
@@ -15,6 +15,7 @@ const treatmentImages = [
 ];
 
 export default function TreatmentsPage() {
+  const treatments = useContentSection("treatments") || [];
   return (
     <>
       <section className="page-hero">

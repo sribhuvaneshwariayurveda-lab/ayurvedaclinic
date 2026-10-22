@@ -147,3 +147,21 @@ export const IconCalendar = (p) => (
     <path d="M8 3v4M16 3v4M3 10h18" />
   </svg>
 );
+
+export const IconChevronLeft = (p) => (
+  <svg {...base} {...p}>
+    <path d="m15 18-6-6 6-6" />
+  </svg>
+);
+
+export const IconChevronRight = (p) => (
+  <svg {...base} {...p}>
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
+export const IconArrowLeft = (p) => (
+  <svg {...base} {...p}>
+    <path d="M19 12H5M11 18l-6-6 6-6" />
+  </svg>
+);

@@ -1,4 +1,4 @@
-import { siteSettings } from "../data/content.js";
+import { getContentSnapshot } from "../data/store.js";
 
 /**
  * Global animation preset system.
@@ -65,7 +65,7 @@ export function resolveMotionPreset() {
     const stored = readStored();
     if (stored) return stored;
   }
-  return normalise(siteSettings.animations) || "full";
+  return normalise(getContentSnapshot().siteSettings?.animations) || "full";
 }
 
 export function getMotionPreset() {

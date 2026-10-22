@@ -10,8 +10,12 @@ server/dist/
 .env.*
 !.env.example
 
-# media uploads (runtime)
-uploads/
+# media uploads (runtime, repository root only)
+/uploads/
+
+# admin-managed content document (runtime, repository root only)
+# Anchored with a leading slash so client/src/data/ stays tracked.
+/data/
 
 # database files (runtime)
 *.sqlite

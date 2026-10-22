@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  about,
-  clinic,
-  contact,
-  faqs,
-  gallery,
-  treatments,
-  why
-} from "../../data/content.js";
+import { useContentSection } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
 import {
   IconAward,
@@ -23,6 +15,9 @@ import {
 } from "../ui/Icons.jsx";
 import Media from "../ui/Media.jsx";
 import Reveal from "../ui/Reveal.jsx";
+import Carousel from "../ui/Carousel.jsx";
+import DiseaseCard from "../diseases/DiseaseCard.jsx";
+import ProductCard from "../products/ProductCard.jsx";
 import AppointmentForm from "./AppointmentForm.jsx";
 
 /* Illustrative imagery for each treatment (clinic botanical assets). */
@@ -36,15 +31,15 @@ const treatmentImages = [
 ];
 
 /* ---------------------------------------------------------------- Counters */
-const counters = [
-  { num: "BAMS", title: "Qualified Physician" },
-  { num: "2023", title: "Graduated · M.G.R. University" },
-  { num: "2 yrs", title: "Clinical Experience" },
-  { num: "2366/A", title: "Registered Practitioner" },
-  { num: "Karur", title: "Pasupathipalayam, Tamil Nadu" }
-];
-
 export function Counters() {
+  const clinic = useContentSection("clinic");
+  const counters = [
+    { num: "BAMS", title: "Qualified Physician" },
+    { num: String(clinic?.graduationYear || ""), title: "Graduated · M.G.R. University" },
+    { num: "2 yrs", title: "Clinical Experience" },
+    { num: clinic?.regNo || "—", title: "Registered Practitioner" },
+    { num: "Karur", title: "Pasupathipalayam, Tamil Nadu" }
+  ];
   return (
     <section className="counters-band" aria-label="Clinic credentials at a glance">
       <div className="container">
@@ -62,15 +57,15 @@ export function Counters() {
 }
 
 /* ------------------------------------------------------- Credentials band */
-const credentials = [
-  { Icon: IconAward, title: "BAMS", sub: "Bachelor of Ayurvedic Medicine & Surgery" },
-  { Icon: IconShield, title: "Reg. 2366/A", sub: "Registered Ayurvedic practitioner" },
-  { Icon: IconUsers, title: "M.G.R. University", sub: "Chennai · graduated 2023" },
-  { Icon: IconHeart, title: "2 Years", sub: "Clinical experience" },
-  { Icon: IconLeaf, title: "Karur", sub: "Pasupathipalayam, Tamil Nadu" }
-];
-
 export function Credentials() {
+  const clinic = useContentSection("clinic");
+  const credentials = [
+    { Icon: IconAward, title: "BAMS", sub: "Bachelor of Ayurvedic Medicine & Surgery" },
+    { Icon: IconShield, title: `Reg. ${clinic?.regNo || ""}`.trim(), sub: "Registered Ayurvedic practitioner" },
+    { Icon: IconUsers, title: "M.G.R. University", sub: "Chennai · graduated 2023" },
+    { Icon: IconHeart, title: "2 Years", sub: "Clinical experience" },
+    { Icon: IconLeaf, title: "Karur", sub: "Pasupathipalayam, Tamil Nadu" }
+  ];
   return (
     <>
       <div className="awards-band">
@@ -99,20 +94,21 @@ export function Credentials() {
 
 /* ------------------------------------------------------------- About band */
 export function AboutBand() {
+  const about = useContentSection("about");
   return (
     <section className="about-band">
       <div className="container">
         <div className="about-band__grid">
           <Reveal className="about-band__media" variant="left">
-            <Media src={about.photos.clinic.src} alt={about.photos.clinic.alt} label="The clinic" />
+            <Media src={about?.photos?.clinic?.src} alt={about?.photos?.clinic?.alt} label="The clinic" />
           </Reveal>
 
           <Reveal variant="right">
             <span className="section-sub">About the Clinic</span>
             <h2>Care rooted in tradition, guided by evidence</h2>
-            <p>{about.paragraphs[0]}</p>
+            <p>{about?.paragraphs?.[0]}</p>
             <ul className="about-band__list">
-              {about.credentials.map((c) => (
+              {(about?.credentials || []).map((c) => (
                 <li key={c}>
                   <IconCheck width={16} height={16} aria-hidden="true" />
                   <span>{c}</span>
@@ -131,6 +127,7 @@ export function AboutBand() {
 
 /* ------------------------------------------------------ Treatments marquee */
 export function TreatmentsMarquee() {
+  const treatments = useContentSection("treatments") || [];
   const rowA = treatments.map((t, i) => ({ ...t, image: treatmentImages[i % treatmentImages.length] }));
   const rowB = [...rowA].reverse();
   const Item = ({ t }) => (
@@ -169,8 +166,95 @@ export function TreatmentsMarquee() {
   );
 }
 
+/* ------------------------------------------------------- Products band */
+export function ProductsBand() {
+  const products = useContentSection("products");
+  const items = products?.items || [];
+  return (
+    <>
+      <div className="head-band">
+        <div className="container">
+          <h2 className="section-title">Our Products</h2>
+          <p className="section-sub">Herbal preparations dispensed after consultation</p>
+        </div>
+      </div>
+      <section className="section section--ivory" id="products" aria-label="Clinic herbal products">
+        <div className="container">
+          <div className="product-grid">
+            {items.slice(0, 6).map((item, i) => (
+              <Reveal key={item.slug || item.name} delay={i % 3} className="product-grid__item">
+                <ProductCard item={item} />
+              </Reveal>
+            ))}
+          </div>
+
+          <p className="product-note">{products?.note}</p>
+
+          <div className="disease-cta">
+            <Link className="btn btn--forest" to="/products">
+              View All Products
+            </Link>
+            <a
+              className="btn btn--gold"
+              href={buildWhatsAppLink(generalEnquiryMessage())}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <IconWhatsApp width={17} height={17} />
+              Ask About Products
+            </a>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* ------------------------------------------------- Diseases carousel band */
+export function DiseasesCarouselBand() {
+  const diseases = useContentSection("diseases");
+  const items = diseases?.items || [];
+  return (
+    <>
+      <div className="head-band">
+        <div className="container">
+          <h2 className="section-title">Diseases We Specialise In</h2>
+          <p className="section-sub">Educational overview — always alongside your doctor&rsquo;s care</p>
+        </div>
+      </div>
+      <section className="section section--soft" id="diseases" aria-label="Diseases we specialise in">
+        <div className="container">
+          {items.length > 0 ? (
+            <Carousel label="Diseases we specialise in" className="disease-carousel">
+              {items.map((item, i) => (
+                <Reveal key={item.slug} delay={i % 3} className="carousel__item">
+                  <DiseaseCard item={item} />
+                </Reveal>
+              ))}
+            </Carousel>
+          ) : (
+            <p className="section-desc">Condition information will appear here shortly.</p>
+          )}
+
+          <p className="product-note">{diseases?.note}</p>
+
+          <div className="disease-cta">
+            <Link className="btn btn--green" to="/diseases">
+              See All Conditions
+            </Link>
+            <Link className="btn btn--outline" to="/contact">
+              Book a Consultation
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 /* ---------------------------------------------------------------- Why grid */
 export function WhyGrid() {
+  const why = useContentSection("why") || [];
   return (
     <>
       <div className="head-band">
@@ -198,6 +282,7 @@ export function WhyGrid() {
 
 /* ----------------------------------------------------------- Power of Ayurveda */
 export function PowerBand() {
+  const gallery = useContentSection("gallery");
   return (
     <section className="power-band">
       <div className="container">
@@ -214,7 +299,7 @@ export function PowerBand() {
           </p>
         </div>
         <div className="power-grid">
-          {gallery.images.map((img, i) => (
+          {(gallery?.images || []).map((img, i) => (
             <Reveal key={img.src} delay={i % 3} className="power-card">
               <div className="power-card__media">
                 <Media src={img.src} alt={img.alt} label={img.caption} />
@@ -260,18 +345,44 @@ export function CtaBand() {
 
 /* ----------------------------------------------------------- Testimonials */
 export function TestimonialsBand() {
+  const note = useContentSection("testimonialsNote");
+  const items = useContentSection("testimonials") || [];
+  const published = items.filter((t) => t && String(t.quote || "").trim());
   return (
     <section className="testi-band">
       <div className="container">
         <h2 className="section-title" style={{ color: "var(--green-dark)" }}>
           What Our Patients Say
         </h2>
-        <Reveal className="testi-note">
-          <p style={{ margin: 0 }}>
-            Testimonials will be published only with genuine patient consent. No results are
-            guaranteed. If you would like to share your experience, please speak with us at the clinic.
-          </p>
-        </Reveal>
+
+        {published.length > 0 ? (
+          <>
+            <div className="testi-grid">
+              {published.map((t, i) => (
+                <Reveal key={`${t.name || "anonymous"}-${i}`} delay={i % 3} className="testi-card">
+                  <blockquote className="testi-card__quote">{t.quote}</blockquote>
+                  <p className="testi-card__name">
+                    {t.name ? t.name : "Anonymous"}
+                    {t.treatment ? <span className="testi-card__meta"> — {t.treatment}</span> : null}
+                  </p>
+                </Reveal>
+              ))}
+            </div>
+            <Reveal className="testi-note">
+              <p style={{ margin: 0 }}>
+                {note ||
+                  "Testimonials will be published only with genuine patient consent. No results are guaranteed."}
+              </p>
+            </Reveal>
+          </>
+        ) : (
+          <Reveal className="testi-note">
+            <p style={{ margin: 0 }}>
+              {note ||
+                "Testimonials will be published only with genuine patient consent. No results are guaranteed."}
+            </p>
+          </Reveal>
+        )}
       </div>
     </section>
   );
@@ -279,6 +390,7 @@ export function TestimonialsBand() {
 
 /* -------------------------------------------------------------------- FAQ */
 export function HomeFaq() {
+  const faqs = useContentSection("faqs") || [];
   const [open, setOpen] = useState(0);
   return (
     <>
@@ -331,21 +443,23 @@ export function HomeFaq() {
 
 /* ---------------------------------------------------------------- Contact */
 export function ContactBand() {
+  const clinic = useContentSection("clinic");
+  const contact = useContentSection("contact");
   const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(
-    clinic.addressLines.join(", ")
+    (clinic?.addressLines || []).join(", ")
   )}&output=embed`;
   return (
     <section className="contact-band" id="contact">
       <div className="container">
         <Reveal style={{ textAlign: "center", marginBottom: "2.4rem" }}>
           <span className="section-sub" style={{ color: "var(--green-dark)" }}>
-            {contact.label}
+            {contact?.label}
           </span>
           <h2 className="section-title" style={{ color: "var(--green-dark)" }}>
-            {contact.title}
+            {contact?.title}
           </h2>
           <p className="section-desc" style={{ marginInline: "auto" }}>
-            {contact.desc}
+            {contact?.desc}
           </p>
         </Reveal>
 
@@ -358,8 +472,8 @@ export function ContactBand() {
                 </span>
                 <span>
                   <b>Clinic address</b>
-                  <a href={clinic.mapsUrl} target="_blank" rel="noopener noreferrer">
-                    {clinic.addressLines.join(", ")}
+                  <a href={clinic?.mapsUrl} target="_blank" rel="noopener noreferrer">
+                    {(clinic?.addressLines || []).join(", ")}
                   </a>
                 </span>
               </div>
@@ -369,7 +483,7 @@ export function ContactBand() {
                 </span>
                 <span>
                   <b>Phone / WhatsApp</b>
-                  <a href={`tel:${clinic.phone.replace(/\s/g, "")}`}>{clinic.phoneDisplay}</a>
+                  <a href={`tel:${String(clinic?.phone || "").replace(/\s/g, "")}`}>{clinic?.phoneDisplay}</a>
                 </span>
               </div>
               <div className="info-row">
@@ -378,7 +492,7 @@ export function ContactBand() {
                 </span>
                 <span>
                   <b>Consultations</b>
-                  {clinic.hoursNote} — send an enquiry and our team will confirm a slot.
+                  {clinic?.hoursNote} — send an enquiry and our team will confirm a slot.
                 </span>
               </div>
             </div>

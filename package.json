@@ -12,6 +12,13 @@
     "start": "node server.js",
     "hash-password": "node scripts/hash-password.mjs",
     "preview": "npm --prefix client run preview",
-    "test:smoke": "npm --prefix client run test:smoke"
+    "test:smoke": "npm --prefix client run test:smoke",
+    "test:store": "npm --prefix client run test:store",
+    "test:admin": "npm --prefix client run test:admin",
+    "test:render": "npm --prefix client run test:render",
+    "test:images": "npm --prefix client run test:images",
+    "test:auth": "node scripts/test-auth.mjs",
+    "test:content": "node scripts/test-content-api.mjs",
+    "test": "npm run test:auth && npm run test:content && npm run test:store && npm run test:admin && npm run test:render && npm run test:images && npm run test:smoke"
   }
 }

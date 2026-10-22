@@ -69,7 +69,7 @@ console.log(`\n=== ${label} ===`);
 
 const pathname = new URL(url).pathname;
 const isHome = pathname === "/";
-const realRoutes = ["/about", "/treatments", "/products", "/gallery", "/faqs", "/contact"];
+const realRoutes = ["/about", "/treatments", "/products", "/gallery", "/faqs", "/contact", "/diseases"];
 
 if (isHome) {
   check("renders clinic name", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));
@@ -95,6 +95,9 @@ if (isHome) {
   check("doctor photo path wired", html.includes("/images/doctor.jpg"));
   check("clinic photo path wired", html.includes("/images/clinic.jpg"));
   check("books via WhatsApp", html.includes("Book an Appointment"));
+  check("products band renders", html.includes("Our Products") && html.includes("product-card"));
+  check("diseases carousel band renders", html.includes("carousel__item") && html.includes("dcard"));
+  check("condition cards link with Learn More", html.includes("Learn More"));
 } else if (pathname === "/admin") {
   check("admin login page renders (not placeholder)", html.includes("Clinic admin panel"));
   check("admin sign-in form renders", html.includes("Sign In"));
@@ -107,6 +110,30 @@ if (isHome) {
 } else if (pathname === "/products") {
   check("product card renders", html.includes("Kidney Care Syrup") && html.includes("product-card"));
   check("product photo path wired", html.includes("/images/kidney-care-syrup.jpg"));
+  check("new product renders", html.includes("Ayurvedic Hair Oil"));
+  check("new product photo path wired", html.includes("/images/products/ayurvedic-hair-oil.jpg"));
+  check("product filter chips render", html.includes("filter-chip"));
+} else if (pathname === "/products/ayurvedic-hair-oil") {
+  check("product detail renders", html.includes("Ayurvedic Hair Oil") && html.includes("detail-grid"));
+  check("product detail image wired", html.includes("/images/products/ayurvedic-hair-oil.jpg"));
+  check("product detail shows usage", html.includes("How it is used"));
+  check("product detail shows disclaimer", html.includes("disclaimer__label"));
+  check("product detail links to WhatsApp", html.includes("wa.me/919629907763"));
+} else if (pathname === "/diseases") {
+  check("disease cards render", html.includes("dcard") && html.includes("disease-grid"));
+  check("carousel renders", html.includes("carousel__track"));
+  check("disease image wired", html.includes("/images/diseases/asthma.jpg"));
+  check("filter chips render", html.includes("filter-chip"));
+  check("credits render", html.includes("Wikimedia Commons") && html.includes("credit-list"));
+  check("medical note renders", html.includes("note"));
+  check("condition cards link with Learn More", html.includes("Learn More"));
+} else if (pathname === "/diseases/asthma") {
+  check("disease detail renders", html.includes("Asthma") && html.includes("detail-grid"));
+  check("disease detail image wired", html.includes("/images/diseases/asthma.jpg"));
+  check("ayurvedic approach section renders", html.includes("Ayurvedic Approach"));
+  check("disclaimer renders", html.includes("disclaimer__label"));
+  check("next/prev navigation renders", html.includes("detail-nav"));
+  check("no cure claims", !/cures? |guaranteed|guarantee(?!d)/i.test(html));
 } else if (realRoutes.includes(pathname)) {
   check("real page renders (heading band / hero)", html.includes("page-hero"));
   check("real page renders clinic name (footer)", html.includes("Sri Bhuvaneshwari Ayurveda Peedam"));

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { treatments } from "../../data/content.js";
+import { useContentSection } from "../../data/store.js";
 import { appointmentEnquiryMessage, buildWhatsAppLink } from "../../lib/whatsapp.js";
 import { IconWhatsApp } from "../ui/Icons.jsx";
 
 const empty = { name: "", phone: "", date: "", time: "", treatment: "" };
 
 export default function AppointmentForm() {
+  const treatments = useContentSection("treatments") || [];
   const [form, setForm] = useState(empty);
   const [error, setError] = useState("");
 

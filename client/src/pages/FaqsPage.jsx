@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { faqs } from "../data/content.js";
+import { useContentSection } from "../data/store.js";
 import { IconWhatsApp } from "../components/ui/Icons.jsx";
 import Reveal from "../components/ui/Reveal.jsx";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../lib/whatsapp.js";
 
 export default function FaqsPage() {
+  const faqs = useContentSection("faqs") || [];
   const [open, setOpen] = useState(0);
   return (
     <>

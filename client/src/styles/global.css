@@ -167,6 +167,13 @@ h6 {
   line-height: 1.8;
 }
 
+/* Accent italic used inside headings (SectionHeading, page titles) */
+.italic-serif {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 500;
+}
+
 /* Heading band (green gradient) used above content sections */
 .head-band {
   background: var(--grad-green);

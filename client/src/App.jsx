@@ -7,12 +7,16 @@ import Home from "./pages/Home.jsx";
 import About from "./pages/About.jsx";
 import TreatmentsPage from "./pages/TreatmentsPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
+import ProductDetail from "./pages/ProductDetail.jsx";
+import DiseasesPage from "./pages/DiseasesPage.jsx";
+import DiseaseDetail from "./pages/DiseaseDetail.jsx";
 import GalleryPage from "./pages/GalleryPage.jsx";
 import FaqsPage from "./pages/FaqsPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import Admin from "./pages/Admin.jsx";
 import Placeholder from "./pages/Placeholder.jsx";
 import { initMotion, watchMotionPreference } from "./lib/motionSettings.js";
+import { loadContent } from "./data/store.js";
 
 /** Instant scroll reset on route change (smooth scrolling would feel odd). */
 function ScrollToTop() {
@@ -28,7 +32,15 @@ export default function App() {
 
   useEffect(() => {
     initMotion();
-    return watchMotionPreference(() => {});
+    const stopWatching = watchMotionPreference(() => {});
+    // Fetch the admin-managed content document. On a static host (no API)
+    // this simply fails and the bundled defaults stay in use.
+    loadContent().then((loaded) => {
+      // The animation preset can come from the content document, so re-resolve
+      // it once the stored copy has been merged in.
+      if (loaded) initMotion();
+    });
+    return stopWatching;
   }, []);
 
   return (
@@ -43,6 +55,9 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/treatments" element={<TreatmentsPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:slug" element={<ProductDetail />} />
+            <Route path="/diseases" element={<DiseasesPage />} />
+            <Route path="/diseases/:slug" element={<DiseaseDetail />} />
             <Route path="/gallery" element={<GalleryPage />} />
             <Route path="/faqs" element={<FaqsPage />} />
             <Route path="/contact" element={<ContactPage />} />

@@ -1,7 +1,8 @@
-import { gallery } from "../data/content.js";
+import { useContentSection } from "../data/store.js";
 import Reveal from "../components/ui/Reveal.jsx";
 
 export default function GalleryPage() {
+  const gallery = useContentSection("gallery");
   return (
     <>
       <section className="page-hero">

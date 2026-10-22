@@ -4,8 +4,10 @@ import {
   Counters,
   Credentials,
   CtaBand,
+  DiseasesCarouselBand,
   HomeFaq,
   PowerBand,
+  ProductsBand,
   TestimonialsBand,
   TreatmentsMarquee,
   WhyGrid
@@ -18,6 +20,8 @@ export default function Home() {
       <Credentials />
       <AboutBand />
       <TreatmentsMarquee />
+      <ProductsBand />
+      <DiseasesCarouselBand />
       <WhyGrid />
       <PowerBand />
       <CtaBand />

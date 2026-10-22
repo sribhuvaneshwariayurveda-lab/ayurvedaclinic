@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { clinic, nav } from "../../data/content.js";
+import { useContent } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
 import { IconLeaf, IconMenu, IconPhone, IconWhatsApp, IconX } from "../ui/Icons.jsx";
 
-const telHref = `tel:${clinic.phone.replace(/\s/g, "")}`;
-
 export default function Header() {
+  const { clinic, nav } = useContent();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
+
+  const telHref = `tel:${String(clinic?.phone || "").replace(/\s/g, "")}`;
 
   useEffect(() => {
     setOpen(false);
@@ -51,11 +52,11 @@ export default function Header() {
         </button>
 
         <div className="site-header__inner">
-          <Link to="/" className="brand-center" aria-label={`${clinic.name} home`}>
+          <Link to="/" className="brand-center" aria-label={`${clinic?.name} home`}>
             <IconLeaf className="brand-center__mark" width={84} height={84} aria-hidden="true" />
             <span className="nametag">
-              <span className="nametag__name">{clinic.name}</span>
-              <span className="nametag__tag">{clinic.tagline}</span>
+              <span className="nametag__name">{clinic?.name}</span>
+              <span className="nametag__tag">{clinic?.tagline}</span>
             </span>
           </Link>
         </div>
@@ -64,7 +65,7 @@ export default function Header() {
           <IconPhone width={18} height={18} style={{ color: "var(--forest)" }} aria-hidden="true" />
           <span>
             <span className="call-now__label">Call Now</span>
-            <span className="call-now__num">{clinic.phoneDisplay}</span>
+            <span className="call-now__num">{clinic?.phoneDisplay}</span>
           </span>
         </a>
       </header>
@@ -79,7 +80,7 @@ export default function Header() {
         <div className="offcanvas__scrim" onClick={() => setOpen(false)} />
         <div className="offcanvas__panel">
           <div className="offcanvas__head">
-            <span className="offcanvas__brand">{clinic.name}</span>
+            <span className="offcanvas__brand">{clinic?.name}</span>
             <button ref={closeRef} className="offcanvas__close" aria-label="Close menu" onClick={() => setOpen(false)}>
               <IconX width={18} height={18} />
             </button>
