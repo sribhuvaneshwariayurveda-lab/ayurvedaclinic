@@ -11,6 +11,7 @@
     "build": "npm --prefix client run build",
     "start": "node server.js",
     "hash-password": "node scripts/hash-password.mjs",
+    "check-admin-config": "node scripts/check-admin-config.mjs",
     "preview": "npm --prefix client run preview",
     "test:smoke": "npm --prefix client run test:smoke",
     "test:store": "npm --prefix client run test:store",

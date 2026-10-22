@@ -14,11 +14,11 @@
  *
  * Usage:  node scripts/test-content-api.mjs
  */
-import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { generateHash } from "./password-hash.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -33,13 +33,6 @@ function check(name, cond) {
   if (!cond) failures.push(name);
 }
 
-function makeHash(password) {
-  const N = 16384, r = 8, p = 1;
-  const salt = crypto.randomBytes(16).toString("hex");
-  const key = crypto.scryptSync(password, Buffer.from(salt, "hex"), 64, { N, r, p });
-  return `$scrypt$N=${N},r=${r},p=${p}$${salt}$${key.toString("hex")}`;
-}
-
 const PASSWORD = "throwaway-content-test-pass-01";
 const USERNAME = "contenttest";
 
@@ -50,7 +43,7 @@ function startServer() {
       HOST: "127.0.0.1",
       PORT: String(PORT),
       ADMIN_USERNAME: USERNAME,
-      ADMIN_PASSWORD_HASH: makeHash(PASSWORD)
+      ADMIN_PASSWORD_HASH: generateHash(PASSWORD)
     },
     stdio: ["ignore", "pipe", "pipe"]
   });

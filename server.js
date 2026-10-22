@@ -80,9 +80,15 @@ function notFound(res) {
  *   ADMIN_USERNAME       admin login name (plain text, not secret)
  *   ADMIN_PASSWORD_HASH  scrypt hash from `npm run hash-password`
  *                        format: $scrypt$N=<n>,r=<r>,p=<p>$<saltHex>$<hashHex>
+ *                        paste the VALUE ONLY — no variable name, no quotes,
+ *                        no leading/trailing whitespace or newline
  *   COOKIE_SECURE       set to "1" in production (HTTPS) so the session
  *                        cookie carries the Secure flag; leave unset for
  *                        local http testing.
+ *
+ * These variables are read once, at startup: restart the application after
+ * changing them. Run `npm run check-admin-config` to validate a value
+ * locally before pasting it into the host's env panel.
  *
  * Endpoints (all JSON except the served upload files):
  *   POST   /api/admin/login    {username, password} -> sets session cookie
@@ -97,7 +103,6 @@ function notFound(res) {
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
-const ADMIN_ENABLED = Boolean(ADMIN_USERNAME && ADMIN_PASSWORD_HASH);
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 const DATA_DIR = path.join(__dirname, "data");
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
@@ -152,29 +157,100 @@ function parsePasswordHash(stored) {
   return { N: Number(m[1]), r: Number(m[2]), p: Number(m[3]), salt: m[4], hash: m[5] };
 }
 
+/* The weakest scrypt parameters the server accepts, the cost ceiling and the
+ * expected salt/key sizes. A value below the floor is refused outright so a
+ * weak hash can never be used to log in. */
+const SCRYPT_MIN = { N: 16384, r: 8, p: 1 };
+const SCRYPT_MAX_N = 1048576;
+const SALT_HEX_LENGTH = 32; // 16 bytes
+const KEY_HEX_LENGTH = 128; // 64 bytes
+
+/**
+ * Classify the ADMIN_PASSWORD_HASH value without revealing any of it.
+ * Returns a short reason code, or null when the value is usable.
+ * The reason never contains any part of the credential itself.
+ */
+function describeAdminHashProblem(stored) {
+  const raw = String(stored || "");
+  if (!raw) return "missing";
+  if (raw !== raw.trim()) return "whitespace";
+  if (/^ADMIN_PASSWORD_HASH\s*=/i.test(raw)) return "prefixed";
+  if (/^["'].*["']$/.test(raw)) return "quoted";
+  if (!raw.startsWith("$scrypt$")) return "not_scrypt";
+  const parsed = parsePasswordHash(raw);
+  if (!parsed) return "malformed";
+  if (parsed.salt.length < SALT_HEX_LENGTH) return "short_salt";
+  if (parsed.hash.length < KEY_HEX_LENGTH) return "short_hash";
+  if (parsed.N < SCRYPT_MIN.N || parsed.r < SCRYPT_MIN.r || parsed.p < SCRYPT_MIN.p) return "weak_params";
+  if (parsed.N > SCRYPT_MAX_N) return "unsafe_params";
+  return null;
+}
+
+/* Credential-free explanation for every reason code. */
+const ADMIN_HASH_PROBLEMS = {
+  missing: "ADMIN_PASSWORD_HASH is empty — set it to the hash printed by `npm run hash-password`.",
+  whitespace:
+    "ADMIN_PASSWORD_HASH has leading/trailing whitespace or a trailing newline — paste the value with no spaces around it.",
+  prefixed:
+    'ADMIN_PASSWORD_HASH starts with "ADMIN_PASSWORD_HASH=" — paste ONLY the value that begins with "$scrypt$".',
+  quoted: "ADMIN_PASSWORD_HASH is wrapped in quotes — paste the bare value, with no quotes.",
+  not_scrypt:
+    'ADMIN_PASSWORD_HASH is not an scrypt hash — generate one with `npm run hash-password` (it must begin with "$scrypt$").',
+  malformed: 'ADMIN_PASSWORD_HASH is malformed — expected "$scrypt$N=16384,r=8,p=1$<saltHex>$<hashHex>".',
+  short_salt:
+    "ADMIN_PASSWORD_HASH has a salt shorter than 16 bytes — regenerate it with `npm run hash-password`.",
+  short_hash:
+    "ADMIN_PASSWORD_HASH has a key shorter than 64 bytes — regenerate it with `npm run hash-password`.",
+  weak_params:
+    "ADMIN_PASSWORD_HASH uses weak scrypt parameters (N must be >= 16384, r >= 8, p >= 1) — regenerate it with `npm run hash-password`.",
+  unsafe_params:
+    "ADMIN_PASSWORD_HASH uses an scrypt cost above the accepted ceiling — regenerate it with `npm run hash-password`.",
+};
+
+/**
+ * Validate the admin configuration.
+ * Returns { ok, code, reason, message } where `code` is the API error code
+ * ("config_missing" / "config_invalid"), `reason` is a short non-sensitive
+ * diagnostic and `message` explains the fix. No credential material is
+ * included in the result.
+ */
+function validateAdminConfig() {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD_HASH) {
+    return {
+      ok: false,
+      code: "config_missing",
+      reason: "missing",
+      message: "ADMIN_USERNAME and ADMIN_PASSWORD_HASH must both be set in the environment.",
+    };
+  }
+  const reason = describeAdminHashProblem(ADMIN_PASSWORD_HASH);
+  if (reason) {
+    return { ok: false, code: "config_invalid", reason, message: ADMIN_HASH_PROBLEMS[reason] };
+  }
+  return { ok: true, code: null, reason: null, message: null };
+}
+
 /* Startup diagnostics — presence, shape and flags only. Never prints values. */
 function logAdminConfig() {
   const tag = "[ayurveda-clinic] admin";
-  if (!ADMIN_ENABLED) {
+  const config = validateAdminConfig();
+  if (config.code === "config_missing") {
     console.warn(`${tag}: DISABLED — set ADMIN_USERNAME and ADMIN_PASSWORD_HASH. Admin API answers 503.`);
+    console.warn(`${tag}: environment variables are read at startup — restart the application after changing them.`);
     return;
   }
   console.log(`${tag}: enabled — reading ADMIN_USERNAME + ADMIN_PASSWORD_HASH from the environment.`);
   if (ADMIN_USERNAME !== ADMIN_USERNAME.trim()) {
     console.warn(`${tag}: ADMIN_USERNAME has leading/trailing whitespace — remove it or logins will fail.`);
   }
-  if (ADMIN_PASSWORD_HASH !== ADMIN_PASSWORD_HASH.trim()) {
-    console.warn(`${tag}: ADMIN_PASSWORD_HASH has leading/trailing whitespace/newline — remove it or logins will fail.`);
-  }
-  if (ADMIN_PASSWORD_HASH.startsWith("ADMIN_PASSWORD_HASH=")) {
-    console.warn(`${tag}: ADMIN_PASSWORD_HASH starts with "ADMIN_PASSWORD_HASH=" — paste ONLY the value that begins with "$scrypt$".`);
-  }
-  if (parsePasswordHash(ADMIN_PASSWORD_HASH)) {
+  if (config.ok) {
     console.log(`${tag}: ADMIN_PASSWORD_HASH format OK (scrypt).`);
   } else {
-    console.warn(`${tag}: ADMIN_PASSWORD_HASH is malformed — expected "$scrypt$N=16384,r=8,p=1$<saltHex>$<hashHex>". Logins will fail until fixed.`);
+    console.warn(`${tag}: ${config.message}`);
+    console.warn(`${tag}: the admin API answers 503 (config_invalid) until this is fixed.`);
   }
-  console.log(`${tag}: COOKIE_SECURE ${COOKIE_SECURE ? "=1 (session cookie is Secure; requires HTTPS)" : "unset (cookie not Secure — set =1 in production HTTPS)"}.`);
+  console.log(`${tag}: COOKIE_SECURE ${COOKIE_SECURE ? "=1 (session cookie is Secure; requires HTTPS)" : "unset (session cookie is not Secure — set =1 in production HTTPS)"}.`);
+  console.log(`${tag}: environment variables are read at startup — restart the application after changing them.`);
 }
 
 function scryptAsync(password, saltHex, opts) {
@@ -334,12 +410,19 @@ async function handleContent(req, res) {
 }
 
 async function handleAdmin(req, res, pathname) {
-  if (!ADMIN_ENABLED) {
+  const config = validateAdminConfig();
+  if (config.code === "config_missing") {
     sendJson(res, 503, { error: "Admin panel is not configured on this server.", code: "config_missing" });
     return;
   }
-  if (!parsePasswordHash(ADMIN_PASSWORD_HASH)) {
-    sendJson(res, 503, { error: "Admin credential is misconfigured on the server.", code: "config_invalid" });
+  if (!config.ok) {
+    // `reason` is a short diagnostic (e.g. "prefixed", "whitespace"); it never
+    // contains any part of the credential itself.
+    sendJson(res, 503, {
+      error: "Admin credential is misconfigured on the server.",
+      code: "config_invalid",
+      reason: config.reason,
+    });
     return;
   }
   const sub = pathname === "/api/admin" ? "/" : pathname.slice("/api/admin".length);

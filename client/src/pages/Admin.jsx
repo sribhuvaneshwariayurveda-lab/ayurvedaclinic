@@ -33,6 +33,22 @@ function messageFor(status, data) {
     return "Admin panel is not configured on this server yet (ADMIN_USERNAME / ADMIN_PASSWORD_HASH missing).";
   }
   if (code === "config_invalid") {
+    const reason = data && data.reason;
+    if (reason === "prefixed") {
+      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH was pasted with the variable name. It must hold only the hash value that starts with $scrypt$.";
+    }
+    if (reason === "whitespace") {
+      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH has leading/trailing whitespace or a newline. Paste the hash value with no spaces around it.";
+    }
+    if (reason === "quoted") {
+      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH is wrapped in quotes. Paste the bare hash value.";
+    }
+    if (reason === "not_scrypt" || reason === "malformed") {
+      return "Server admin credential is misconfigured: ADMIN_PASSWORD_HASH is not a valid scrypt hash (expected $scrypt$N=…,r=…,p=…$<salt>$<hash>).";
+    }
+    if (reason === "short_salt" || reason === "short_hash" || reason === "weak_params" || reason === "unsafe_params") {
+      return "Server admin credential is misconfigured: the stored hash is incomplete or uses unsafe parameters. It has to be regenerated with npm run hash-password.";
+    }
     return "Server admin credential is misconfigured. An administrator must fix ADMIN_PASSWORD_HASH (expected $scrypt$N=…,r=…,p=…$<salt>$<hash>).";
   }
   if (code === "origin_rejected") {

@@ -188,7 +188,9 @@ Existing vars are untouched: `PORT` and `HOST` work exactly as before.
 
 ### Creating / changing the password (hash generation)
 
-The password itself is never stored anywhere — only its scrypt hash:
+The password itself is never stored anywhere — only its scrypt hash. The
+hash uses a cryptographically secure random 16-byte salt and
+`N=16384, r=8, p=1`:
 
 ```powershell
 $env:ADMIN_PASSWORD = "use-a-long-random-password-min-16-chars"
@@ -196,9 +198,55 @@ npm run hash-password
 Remove-Item Env:\ADMIN_PASSWORD
 ```
 
-Copy **only** the printed `ADMIN_PASSWORD_HASH=...` value into Hostinger's
-environment variables, then restart the app. There is no database to reset and
-no existing accounts to preserve (authentication is env-based, single admin).
+`npm run hash-password` prints **only the hash value** on stdout (no variable
+name, no quotes, no trailing newline) and the instructions on stderr, so the
+value can be piped or copied straight into the host's env panel. To type the
+password without echoing it into your shell history instead:
+
+```powershell
+npm run hash-password -- --prompt
+```
+
+The value looks like this (the salt and key change every run):
+
+```
+$scrypt$N=16384,r=8,p=1$1f3c…$9ab2…
+```
+
+### Configuring it in Hostinger
+
+1. Generate the hash locally (above).
+2. Open **Hostinger → Advanced → Node.js → your app → Environment Variables**.
+3. Add `ADMIN_USERNAME` — the login name you type on the `/admin` sign-in
+   screen (plain text, not a secret).
+4. Add `ADMIN_PASSWORD_HASH` — paste **only** the hash value. The field must
+   hold exactly `$scrypt$N=…,r=…,p=…$<salt>$<hash>`:
+   - do **not** include the `ADMIN_PASSWORD_HASH=` prefix,
+   - do **not** wrap the value in quotes,
+   - do **not** leave a trailing space or newline.
+5. Add `COOKIE_SECURE` = `1` (the site is served over HTTPS).
+6. **Restart the application.** The variables are read once, at startup, so a
+   redeploy/restart is required before the new value takes effect.
+
+Check a value locally before pasting it:
+
+```powershell
+$env:ADMIN_USERNAME = "your-admin-name"
+$env:ADMIN_PASSWORD_HASH = "<the value you are about to paste>"
+npm run check-admin-config
+Remove-Item Env:\ADMIN_PASSWORD_HASH
+```
+
+The checker prints only the shape of the value and the reason when something
+is wrong — never the value itself. If the admin panel shows *"Admin panel is
+not configured"* (`503 config_missing`) or *"Admin credential is
+misconfigured"* (`503 config_invalid`), read the server startup log: it names
+the exact problem (`prefixed`, `whitespace`, `quoted`, `not_scrypt`,
+`malformed`, `short_salt`, `short_hash`, `weak_params`) without revealing the
+credential.
+
+There is no database to reset and no existing accounts to preserve
+(authentication is env-based, single admin).
 
 ### Password reset procedure
 
