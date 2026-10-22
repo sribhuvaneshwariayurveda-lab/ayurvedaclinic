@@ -56,11 +56,9 @@ export const nav = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/about" },
   { label: "Treatments", to: "/treatments" },
-  { label: "Products", to: "/products" },
   { label: "Diseases", to: "/diseases" },
-  { label: "Gallery", to: "/gallery" },
-  { label: "FAQs", to: "/faqs" },
-  { label: "Contact", to: "/contact" }
+  { label: "Medicines", to: "/products" },
+  { label: "Contact Us", to: "/contact" }
 ];
 
 export const hero = {
@@ -175,36 +173,54 @@ export const treatments = [
     cat: "Consultation",
     title: "Ayurvedic Consultation",
     desc: "Detailed Prakriti and Vikriti assessment with a personalised treatment and diet plan.",
+    details:
+      "Every visit begins with a conversation, not a prescription. The physician reviews your history, current medicines, sleep, digestion and daily routine before examining pulse, tongue and constitution.",
+    includes: ["Prakriti & Vikriti assessment", "Medicine review", "Written diet and routine guidance"],
     mediaLabel: "Consultation"
   },
   {
     cat: "Panchakarma",
     title: "Panchakarma Detox",
     desc: "Supervised cleansing therapies including Vamana, Virechana, Basti, Nasya and Raktamokshana where indicated.",
+    details:
+      "The five classical cleansing procedures are never applied as a standard package. Suitability, preparation, supervision and recovery are planned individually by the physician.",
+    includes: ["Pre-procedure assessment", "Supervised classical procedures", "Post-procedure diet and review"],
     mediaLabel: "Panchakarma therapy"
   },
   {
     cat: "Panchakarma",
     title: "Abhyanga & Swedana",
     desc: "Therapeutic oil massage and herbal steam to ease stiffness, improve circulation and calm the nervous system.",
+    details:
+      "Warm medicated oil and herbal steam are used together in a traditional sequence. The oils, pressure and duration are selected after assessment, with careful attention to comfort and safety.",
+    includes: ["Medicated oil massage", "Herbal steam", "Therapist-led aftercare guidance"],
     mediaLabel: "Abhyanga therapy"
   },
   {
     cat: "Women's Health",
     title: "Women's Health Care",
     desc: "Support for menstrual health, PCOS, hormonal balance and post-natal recovery.",
+    details:
+      "Care is planned around the individual's stage of life, medical history and current treatment. Ayurveda is used supportively, alongside gynaecological advice where it is needed.",
+    includes: ["Menstrual and hormonal health support", "Post-natal recovery guidance", "Diet, rest and routine planning"],
     mediaLabel: "Women's health"
   },
   {
     cat: "Lifestyle & Metabolism",
     title: "Metabolic & Lifestyle Care",
     desc: "Ayurvedic management of digestion, weight, blood sugar and stress-related concerns.",
+    details:
+      "Long-term metabolic health is approached through food, movement, sleep and routine, with classical preparations where appropriate. Prescribed monitoring and medicines continue alongside.",
+    includes: ["Digestive and metabolic assessment", "Practical meal and routine planning", "Coordinated follow-up"],
     mediaLabel: "Lifestyle care"
   },
   {
     cat: "Wellness",
     title: "Wellness & Prevention",
     desc: "Seasonal routines (Ritucharya), immunity support and Rasayana therapies for everyday wellbeing.",
+    details:
+      "Preventive care focuses on living in step with the season and constitution. Advice is practical, affordable and designed to be sustained rather than followed for a short course only.",
+    includes: ["Seasonal routine guidance", "Restorative herbal support", "Preventive follow-up"],
     mediaLabel: "Wellness"
   }
 ];
@@ -265,11 +281,11 @@ export const contact = {
    -------------------------------------------------------------------------- */
 
 export const products = {
-  label: "Clinic Products",
-  title: "Herbal products",
-  titleAccent: "at the clinic.",
-  desc: "Classical herbal products dispensed at the clinic as part of a doctor-led treatment plan. Ask the physician whether a product is appropriate for you.",
-  note: "Products are dispensed after consultation. No product is a substitute for medical advice — follow the physician's directions and do not stop prescribed medication on your own.",
+  label: "Our Medicines",
+  title: "Herbal medicines",
+  titleAccent: "dispensed with care.",
+  desc: "Classical herbal preparations available at the clinic as part of a doctor-led treatment plan. Ask the physician whether a medicine is appropriate for you.",
+  note: "Medicines are dispensed after consultation. No medicine is a substitute for medical advice — follow the physician's directions and do not stop prescribed medication on your own.",
   items: [
     {
       slug: "kidney-care-syrup",
@@ -492,6 +508,48 @@ export const products = {
       gallery: [{ src: "/images/products/anti-alcohol-powder.jpg", alt: "Anti Alcohol Powder — clinic product display" }]
     }
   ]
+};
+
+/* --------------------------------------------------------------------------
+   Homepage statistics. Every value here is drawn from information already
+   published by the clinic (qualification, graduation year, catalogue counts)
+   rather than an invented patient or years-of-service figure.
+   -------------------------------------------------------------------------- */
+
+export const stats = {
+  label: "The clinic at a glance",
+  title: "Qualification you can check. Care you can feel.",
+  items: [
+    { value: "BAMS", label: "Qualified Ayurvedic physician" },
+    { value: "2023", label: "Graduated · M.G.R. University" },
+    { value: "2+ yrs", label: "Clinical experience" },
+    { value: "18", label: "Conditions supported" },
+    { value: "10", label: "Clinic medicines" }
+  ]
+};
+
+/* --------------------------------------------------------------------------
+   Daily slogan / philosophy. The server replaces this section with the
+   admin-published entry; drafts are never sent to public visitors.
+   -------------------------------------------------------------------------- */
+
+const initialSlogan = {
+  heading: "Our Philosophy of Wellness",
+  english: "To preserve the health of the healthy and alleviate the ailments of the unwell.",
+  tamil: "",
+  sanskrit: "स्वस्थस्य स्वास्थ्य रक्षणं, आतुरस्य विकार प्रशमनं।",
+  meaning: "To preserve the health of the healthy and alleviate the ailments of the unwell.",
+  description:
+    "A thought to carry through the day — care that protects wellbeing and gently eases what is out of balance.",
+  visible: true,
+  startAt: "",
+  endAt: "",
+  publishedAt: ""
+};
+
+export const slogan = {
+  published: { ...initialSlogan, status: "published" },
+  draft: { ...initialSlogan, status: "draft" }
 };
 
 /* --------------------------------------------------------------------------
@@ -1087,6 +1145,8 @@ export const defaultContent = {
   faqs,
   contact,
   products,
+  stats,
+  slogan,
   diseases,
   credits,
   intro,

@@ -30,24 +30,30 @@ const treatmentImages = [
   "/images/tulsi-spike.jpg"
 ];
 
-/* ---------------------------------------------------------------- Counters */
-export function Counters() {
-  const clinic = useContentSection("clinic");
-  const counters = [
-    { num: "BAMS", title: "Qualified Physician" },
-    { num: String(clinic?.graduationYear || ""), title: "Graduated · M.G.R. University" },
-    { num: "2 yrs", title: "Clinical Experience" },
-    { num: clinic?.regNo || "—", title: "Registered Practitioner" },
-    { num: "Karur", title: "Pasupathipalayam, Tamil Nadu" }
-  ];
+/* ------------------------------------------------------------- Home stats */
+const fallbackStats = [
+  { value: "BAMS", label: "Qualified Ayurvedic physician" },
+  { value: "2023", label: "Graduated · M.G.R. University" },
+  { value: "2+ yrs", label: "Clinical experience" },
+  { value: "18", label: "Conditions supported" },
+  { value: "10", label: "Clinic medicines" }
+];
+
+export function StatsBand() {
+  const stats = useContentSection("stats");
+  const items = Array.isArray(stats?.items) && stats.items.length ? stats.items : fallbackStats;
   return (
-    <section className="counters-band" aria-label="Clinic credentials at a glance">
+    <section className="counters-band stats-band" aria-label="The clinic at a glance">
       <div className="container">
-        <div className="counters-band__grid">
-          {counters.map((c, i) => (
-            <Reveal key={c.title} delay={i % 5} className="counter">
-              <div className="counter__num">{c.num}</div>
-              <div className="counter__title">{c.title}</div>
+        <Reveal className="stats-band__head">
+          <span className="section-sub">{stats?.label || "The clinic at a glance"}</span>
+          <p>{stats?.title || "Qualification you can check. Care you can feel."}</p>
+        </Reveal>
+        <div className="counters-band__grid stats-band__grid">
+          {items.map((item, i) => (
+            <Reveal key={`${item.value}-${item.label}`} delay={i % 5} className="counter stats-band__item">
+              <div className="counter__num">{item.value}</div>
+              <div className="counter__title">{item.label}</div>
             </Reveal>
           ))}
         </div>
@@ -95,29 +101,60 @@ export function Credentials() {
 /* ------------------------------------------------------------- About band */
 export function AboutBand() {
   const about = useContentSection("about");
+  const clinic = useContentSection("clinic");
+  const pillars = about?.pillars || [];
+
   return (
-    <section className="about-band">
+    <section className="about-band about-band--revamp">
       <div className="container">
         <div className="about-band__grid">
-          <Reveal className="about-band__media" variant="left">
-            <Media src={about?.photos?.clinic?.src} alt={about?.photos?.clinic?.alt} label="The clinic" />
-          </Reveal>
+          <div className="about-band__visual">
+            <Reveal className="about-band__media" variant="left">
+              <Media src={about?.photos?.clinic?.src} alt={about?.photos?.clinic?.alt} label="The clinic" />
+            </Reveal>
+            <Reveal className="about-band__portrait" variant="zoom" delay={1}>
+              <Media src={about?.photos?.doctor?.src} alt={about?.photos?.doctor?.alt} label="The physician" />
+            </Reveal>
+            <span className="about-band__seal">
+              <b>{clinic?.qualifications || "BAMS"}</b>
+              <span>Reg. {clinic?.regNo}</span>
+            </span>
+          </div>
 
-          <Reveal variant="right">
+          <Reveal variant="right" className="about-band__copy">
             <span className="section-sub">About the Clinic</span>
-            <h2>Care rooted in tradition, guided by evidence</h2>
+            <h2>
+              {about?.title} <span className="italic-serif">{about?.titleAccent}</span>
+            </h2>
             <p>{about?.paragraphs?.[0]}</p>
+
+            {pillars.length ? (
+              <div className="about-band__pillars">
+                {pillars.map((pillar) => (
+                  <div key={pillar.title} className="about-band__pillar">
+                    <b>{pillar.title}</b>
+                    <span>{pillar.text}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
             <ul className="about-band__list">
-              {(about?.credentials || []).map((c) => (
+              {(about?.credentials || []).slice(0, 3).map((c) => (
                 <li key={c}>
                   <IconCheck width={16} height={16} aria-hidden="true" />
                   <span>{c}</span>
                 </li>
               ))}
             </ul>
-            <Link className="btn btn--brown" to="/about">
-              About Us
-            </Link>
+            <div className="about-band__actions">
+              <Link className="btn btn--brown" to="/about">
+                About Us
+              </Link>
+              <Link className="btn btn--outline" to="/treatments">
+                Our Treatments
+              </Link>
+            </div>
           </Reveal>
         </div>
       </div>
@@ -174,11 +211,11 @@ export function ProductsBand() {
     <>
       <div className="head-band">
         <div className="container">
-          <h2 className="section-title">Our Products</h2>
-          <p className="section-sub">Herbal preparations dispensed after consultation</p>
+          <h2 className="section-title">Our Medicines</h2>
+          <p className="section-sub">Classical herbal preparations, dispensed after consultation</p>
         </div>
       </div>
-      <section className="section section--ivory" id="products" aria-label="Clinic herbal products">
+      <section className="section section--ivory" id="products" aria-label="Clinic herbal medicines">
         <div className="container">
           <div className="product-grid">
             {items.slice(0, 6).map((item, i) => (
@@ -192,7 +229,7 @@ export function ProductsBand() {
 
           <div className="disease-cta">
             <Link className="btn btn--forest" to="/products">
-              View All Products
+              View All Medicines
             </Link>
             <a
               className="btn btn--gold"
@@ -201,7 +238,7 @@ export function ProductsBand() {
               rel="noopener noreferrer"
             >
               <IconWhatsApp width={17} height={17} />
-              Ask About Products
+              Ask About Medicines
             </a>
           </div>
         </div>

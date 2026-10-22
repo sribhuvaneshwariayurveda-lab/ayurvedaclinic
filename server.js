@@ -120,6 +120,14 @@ const UPLOADS_DIR = path.join(__dirname, "uploads");
 const DATA_DIR = path.join(__dirname, "data");
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
 const MAX_CONTENT_BYTES = 512 * 1024;
+const SLOGAN_LIMITS = {
+  heading: 120,
+  english: 500,
+  tamil: 500,
+  sanskrit: 500,
+  meaning: 700,
+  description: 1200,
+};
 const SESSION_COOKIE = "sbap_admin";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -556,6 +564,118 @@ async function writeContentDoc(doc) {
   await fs.promises.rename(tmp, CONTENT_FILE);
 }
 
+/* ---------------------------------------------------------------------------
+ * Daily slogan. The published entry and the working draft live in the same
+ * content document, but GET /api/content only ever receives the active
+ * published entry — the draft is never exposed to public visitors.
+ * ------------------------------------------------------------------------- */
+
+function isPlainObject(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Trim, normalise, strip markup/control characters and cap one text field. */
+function cleanSloganText(value, maxLength, multiline = false) {
+  if (typeof value !== "string") return "";
+  let text = value.normalize("NFC");
+  text = multiline
+    ? text.replace(/\r\n?/g, "\n").replace(/\t/g, "  ")
+    : text.replace(/[\r\n\t]+/g, " ");
+  text = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+  // Slogans are plain text: never accept markup from the admin form.
+  text = text.replace(/[<>]/g, "");
+  return text.trim().slice(0, maxLength);
+}
+
+/** Accept a browser datetime-local value only when it is a real date. */
+function cleanSloganDate(value) {
+  if (typeof value !== "string") return "";
+  const text = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(text)) return "";
+  return Number.isNaN(new Date(text).getTime()) ? "" : text;
+}
+
+function cleanSloganTimestamp(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
+function sloganHasVerse(entry) {
+  return Boolean(entry && (entry.english || entry.tamil || entry.sanskrit || entry.meaning));
+}
+
+function cleanSloganEntry(entry, wantPublished) {
+  if (!isPlainObject(entry)) return null;
+  const cleaned = {
+    heading: cleanSloganText(entry.heading, SLOGAN_LIMITS.heading),
+    english: cleanSloganText(entry.english, SLOGAN_LIMITS.english),
+    tamil: cleanSloganText(entry.tamil, SLOGAN_LIMITS.tamil),
+    sanskrit: cleanSloganText(entry.sanskrit, SLOGAN_LIMITS.sanskrit),
+    meaning: cleanSloganText(entry.meaning, SLOGAN_LIMITS.meaning),
+    description: cleanSloganText(entry.description, SLOGAN_LIMITS.description, true),
+    visible: entry.visible !== false,
+    status: wantPublished ? "published" : "draft",
+    startAt: cleanSloganDate(entry.startAt),
+    endAt: cleanSloganDate(entry.endAt),
+    publishedAt: cleanSloganTimestamp(entry.publishedAt),
+  };
+  if (wantPublished && !cleaned.publishedAt) cleaned.publishedAt = new Date().toISOString();
+  return cleaned;
+}
+
+/** Validate and normalise an entire slogan section before it is persisted. */
+function sanitizeSloganSection(section) {
+  if (!isPlainObject(section)) {
+    return { ok: false, error: "Invalid slogan section." };
+  }
+  const published = section.published ? cleanSloganEntry(section.published, true) : null;
+  const draft = section.draft ? cleanSloganEntry(section.draft, false) : null;
+  if (published && !sloganHasVerse(published)) {
+    return { ok: false, error: "Add a slogan in at least one language before publishing." };
+  }
+  if (published) {
+    const start = published.startAt ? new Date(published.startAt).getTime() : null;
+    const end = published.endAt ? new Date(published.endAt).getTime() : null;
+    if (start !== null && end !== null && end <= start) {
+      return { ok: false, error: "The end date must be after the start date." };
+    }
+  }
+  return {
+    ok: true,
+    value: {
+      published,
+      draft,
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+function sloganIsActive(published, now = Date.now()) {
+  if (!isPlainObject(published) || published.status !== "published" || published.visible === false) {
+    return false;
+  }
+  if (!sloganHasVerse(published)) return false;
+  if (published.startAt) {
+    const start = new Date(published.startAt).getTime();
+    if (!Number.isNaN(start) && now < start) return false;
+  }
+  if (published.endAt) {
+    const end = new Date(published.endAt).getTime();
+    if (!Number.isNaN(end) && now > end) return false;
+  }
+  return true;
+}
+
+/** Public projection: active published slogan only, never the draft. */
+function publicSloganSection(section) {
+  const published = isPlainObject(section) ? section.published : null;
+  return {
+    published: sloganIsActive(published) ? published : null,
+    updatedAt: isPlainObject(section) ? section.updatedAt || "" : "",
+  };
+}
+
 /**
  * Public, read-only access to the admin-managed content document.
  * Always available (it does not depend on the admin account being set up) so
@@ -563,6 +683,9 @@ async function writeContentDoc(doc) {
  */
 async function handleContent(req, res) {
   const doc = await readContentDoc();
+  if (Object.prototype.hasOwnProperty.call(doc, "slogan")) {
+    doc.slogan = publicSloganSection(doc.slogan);
+  }
   sendJson(res, 200, doc, { "Cache-Control": "no-cache" });
 }
 
@@ -689,6 +812,14 @@ async function handleAdmin(req, res, pathname) {
     if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
       sendJson(res, 400, { error: "Invalid content document.", code: "invalid_request" });
       return;
+    }
+    if (Object.prototype.hasOwnProperty.call(patch, "slogan")) {
+      const slogan = sanitizeSloganSection(patch.slogan);
+      if (!slogan.ok) {
+        sendJson(res, 400, { error: slogan.error, code: "invalid_slogan" });
+        return;
+      }
+      patch = { ...patch, slogan: slogan.value };
     }
     const next = { ...(await readContentDoc()), ...patch };
     try {

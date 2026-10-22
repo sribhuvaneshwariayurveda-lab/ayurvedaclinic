@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useContent } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
-import { IconLeaf, IconMenu, IconPhone, IconWhatsApp, IconX } from "../ui/Icons.jsx";
+import BrandLogo from "../ui/BrandLogo.jsx";
+import { IconMenu, IconPhone, IconWhatsApp, IconX } from "../ui/Icons.jsx";
 
 export default function Header() {
   const { clinic, nav } = useContent();
@@ -37,37 +38,54 @@ export default function Header() {
     };
   }, [open]);
 
+  const isActive = (to) =>
+    to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+
   return (
     <>
       <header className="site-header">
-        <button
-          ref={toggleRef}
-          className="nav-toggle"
-          aria-label="Open menu"
-          aria-expanded={open}
-          aria-controls="site-menu"
-          onClick={() => setOpen(true)}
-        >
-          <IconMenu width={22} height={22} />
-        </button>
-
         <div className="site-header__inner">
           <Link to="/" className="brand-center" aria-label={`${clinic?.name} home`}>
-            <IconLeaf className="brand-center__mark" width={84} height={84} aria-hidden="true" />
+            <BrandLogo className="brand-center__mark" />
             <span className="nametag">
               <span className="nametag__name">{clinic?.name}</span>
               <span className="nametag__tag">{clinic?.tagline}</span>
             </span>
           </Link>
-        </div>
 
-        <a className="call-now" href={telHref}>
-          <IconPhone width={18} height={18} style={{ color: "var(--forest)" }} aria-hidden="true" />
-          <span>
-            <span className="call-now__label">Call Now</span>
-            <span className="call-now__num">{clinic?.phoneDisplay}</span>
-          </span>
-        </a>
+          <nav className="site-nav" aria-label="Primary">
+            {nav.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={isActive(item.to) ? "is-active" : undefined}
+                aria-current={isActive(item.to) ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="site-header__actions">
+            <a className="call-now" href={telHref} aria-label={`Call ${clinic?.phoneDisplay || ""}`.trim()}>
+              <IconPhone width={18} height={18} style={{ color: "var(--forest)" }} aria-hidden="true" />
+              <span>
+                <span className="call-now__label">Call Now</span>
+                <span className="call-now__num">{clinic?.phoneDisplay}</span>
+              </span>
+            </a>
+            <button
+              ref={toggleRef}
+              className="nav-toggle"
+              aria-label="Open menu"
+              aria-expanded={open}
+              aria-controls="site-menu"
+              onClick={() => setOpen(true)}
+            >
+              <IconMenu width={22} height={22} />
+            </button>
+          </div>
+        </div>
       </header>
 
       <div
@@ -80,7 +98,10 @@ export default function Header() {
         <div className="offcanvas__scrim" onClick={() => setOpen(false)} />
         <div className="offcanvas__panel">
           <div className="offcanvas__head">
-            <span className="offcanvas__brand">{clinic?.name}</span>
+            <span className="offcanvas__brand">
+              <BrandLogo className="offcanvas__mark" />
+              {clinic?.name}
+            </span>
             <button ref={closeRef} className="offcanvas__close" aria-label="Close menu" onClick={() => setOpen(false)}>
               <IconX width={18} height={18} />
             </button>
@@ -88,11 +109,23 @@ export default function Header() {
 
           <nav className="offcanvas__links" aria-label="Primary">
             {nav.map((item) => (
-              <Link key={item.to} to={item.to} onClick={() => setOpen(false)}>
+              <Link
+                key={item.to}
+                to={item.to}
+                className={isActive(item.to) ? "is-active" : undefined}
+                aria-current={isActive(item.to) ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
                 {item.label}
               </Link>
             ))}
           </nav>
+
+          <div className="offcanvas__more">
+            <Link to="/gallery" onClick={() => setOpen(false)}>Gallery</Link>
+            <Link to="/faqs" onClick={() => setOpen(false)}>FAQs</Link>
+            <Link to="/case-studies" onClick={() => setOpen(false)}>Case Studies</Link>
+          </div>
 
           <div className="offcanvas__cta">
             <a

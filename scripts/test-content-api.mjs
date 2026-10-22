@@ -97,7 +97,7 @@ async function putJson(url, body, cookie) {
 const hadContentFile = fs.existsSync(CONTENT_FILE);
 const previousContent = hadContentFile ? fs.readFileSync(CONTENT_FILE, "utf8") : null;
 
-const { child, logs } = startServer();
+let { child, logs } = startServer();
 try {
   check("server became ready", await waitReady());
 
@@ -117,7 +117,7 @@ try {
     body: JSON.stringify({ username: USERNAME, password: PASSWORD })
   });
   const loginData = await loginRes.json().catch(() => null);
-  const cookie = (loginRes.headers.get("set-cookie") || "").split(";")[0];
+  let cookie = (loginRes.headers.get("set-cookie") || "").split(";")[0];
   check("login succeeds", loginRes.status === 200 && loginData && loginData.ok === true);
   check("login sets a session cookie", /^sbap_admin=/.test(cookie));
 
@@ -194,6 +194,121 @@ try {
     "the emptied list is served publicly",
     pub4.data && Array.isArray(pub4.data.testimonials) && pub4.data.testimonials.length === 0
   );
+
+  // 6d. the daily slogan keeps drafts private until published
+  const sloganDraft = {
+    heading: "Draft heading",
+    english: "Draft text that visitors must not see.",
+    tamil: "வரைவு உரை",
+    sanskrit: "",
+    meaning: "",
+    description: "Working note.",
+    visible: true,
+    startAt: "",
+    endAt: ""
+  };
+  const draftPut = await putJson(`${BASE}/api/admin/content`, { slogan: { published: null, draft: sloganDraft } }, cookie);
+  check("saving a slogan draft succeeds", draftPut.status === 200);
+  const pubDraft = await getJson(`${BASE}/api/content`);
+  check("an unpublished slogan is not shown publicly", pubDraft.data.slogan && pubDraft.data.slogan.published === null);
+  check("the public content never exposes the slogan draft", pubDraft.data.slogan && !("draft" in pubDraft.data.slogan));
+  const adminDraft = await getJson(`${BASE}/api/admin/content`, cookie);
+  check(
+    "the authenticated content endpoint still returns the draft",
+    adminDraft.data && adminDraft.data.slogan && adminDraft.data.slogan.draft.english === sloganDraft.english
+  );
+
+  const publishedSlogan = {
+    heading: "Published <b>test</b>",
+    english: "English Unicode – health ✓",
+    tamil: "தமிழ் சோதனை",
+    sanskrit: "स्वस्थस्य स्वास्थ्य रक्षणं",
+    meaning: "To preserve health.",
+    description: "First line.\nSecond line.",
+    visible: true,
+    startAt: "",
+    endAt: ""
+  };
+  const publishPut = await putJson(
+    `${BASE}/api/admin/content`,
+    { slogan: { published: publishedSlogan, draft: sloganDraft } },
+    cookie
+  );
+  check("publishing a slogan succeeds", publishPut.status === 200);
+  const pubPublished = await getJson(`${BASE}/api/content`);
+  const live = pubPublished.data.slogan && pubPublished.data.slogan.published;
+  check("a published slogan is shown publicly", Boolean(live));
+  check("the published status is set by the server", live && live.status === "published");
+  check("English Unicode survives publishing", live && live.english === publishedSlogan.english);
+  check("Tamil Unicode survives publishing", live && live.tamil === publishedSlogan.tamil);
+  check("Sanskrit Unicode survives publishing", live && live.sanskrit === publishedSlogan.sanskrit);
+  check("multiline descriptions are preserved", live && live.description.includes("\n"));
+  check("markup is stripped from slogan text", live && !/[<>]/.test(live.heading));
+  check("the public payload still hides the draft", pubPublished.data.slogan && !("draft" in pubPublished.data.slogan));
+
+  const futurePut = await putJson(
+    `${BASE}/api/admin/content`,
+    { slogan: { published: { ...publishedSlogan, startAt: "2099-01-01T00:00" }, draft: sloganDraft } },
+    cookie
+  );
+  check("saving a scheduled slogan succeeds", futurePut.status === 200);
+  const pubFuture = await getJson(`${BASE}/api/content`);
+  check("a future schedule hides the slogan", pubFuture.data.slogan && pubFuture.data.slogan.published === null);
+
+  const expiredPut = await putJson(
+    `${BASE}/api/admin/content`,
+    { slogan: { published: { ...publishedSlogan, endAt: "2000-01-01T00:00" }, draft: sloganDraft } },
+    cookie
+  );
+  check("saving an ended schedule succeeds", expiredPut.status === 200);
+  const pubExpired = await getJson(`${BASE}/api/content`);
+  check("an expired schedule hides the slogan", pubExpired.data.slogan && pubExpired.data.slogan.published === null);
+
+  const emptyPublish = await putJson(
+    `${BASE}/api/admin/content`,
+    { slogan: { published: { heading: "No verse", visible: true }, draft: null } },
+    cookie
+  );
+  check("publishing without any slogan text is rejected", emptyPublish.status === 400);
+
+  const badRange = await putJson(
+    `${BASE}/api/admin/content`,
+    {
+      slogan: {
+        published: { ...publishedSlogan, startAt: "2030-01-02T00:00", endAt: "2030-01-01T00:00" },
+        draft: sloganDraft
+      }
+    },
+    cookie
+  );
+  check("an end date before the start date is rejected", badRange.status === 400);
+
+  const finalPublish = await putJson(
+    `${BASE}/api/admin/content`,
+    { slogan: { published: publishedSlogan, draft: sloganDraft } },
+    cookie
+  );
+  check("republishing the active slogan succeeds", finalPublish.status === 200);
+
+  // 6e. the slogan survives a full server restart
+  child.kill();
+  await new Promise((r) => setTimeout(r, 350));
+  ({ child, logs } = startServer());
+  check("server restarted for the persistence check", await waitReady());
+  const pubAfterRestart = await getJson(`${BASE}/api/content`);
+  check(
+    "the published slogan persists across a restart",
+    pubAfterRestart.data.slogan &&
+      pubAfterRestart.data.slogan.published &&
+      pubAfterRestart.data.slogan.published.english === publishedSlogan.english
+  );
+  const relogin = await fetch(`${BASE}/api/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: USERNAME, password: PASSWORD })
+  });
+  cookie = (relogin.headers.get("set-cookie") || "").split(";")[0];
+  check("login succeeds after the restart", relogin.status === 200 && /^sbap_admin=/.test(cookie));
 
   // 7. the document is on disk in the expected place
   check("data/content.json was written", fs.existsSync(CONTENT_FILE));

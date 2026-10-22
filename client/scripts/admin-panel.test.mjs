@@ -101,6 +101,8 @@ const root = doc.getElementById("root");
 
 check("admin panel renders the signed-in view", root.innerHTML.includes("Signed in as"));
 check("the Images tab is present", root.innerHTML.includes("Upload an image"));
+check("the Daily Slogan tab is present", root.innerHTML.includes("Daily Slogan"));
+check("the Home Stats tab is present", root.innerHTML.includes("Home Stats"));
 check("the About Us tab is present", root.innerHTML.includes("About Us"));
 check("the Products tab is present", root.innerHTML.includes("Products"));
 check("the Diseases tab is present", root.innerHTML.includes("Diseases"));
@@ -119,6 +121,11 @@ function clickTab(label) {
 }
 
 await new Promise((r) => setTimeout(r, 150));
+
+check("the Home Stats tab opens", clickTab("Home Stats"));
+await new Promise((r) => setTimeout(r, 150));
+check("the stats editor loads the bundled figures", root.innerHTML.includes("2+ yrs") && root.innerHTML.includes("Clinical experience"));
+check("the stats editor has a save button", root.innerHTML.includes("Save Home Stats"));
 
 check("the About Us tab opens", clickTab("About Us"));
 await new Promise((r) => setTimeout(r, 150));
@@ -150,6 +157,60 @@ await new Promise((r) => setTimeout(r, 150));
 check("the gallery editor shows the bundled images", root.innerHTML.includes("/images/hero-diyo.jpg"));
 check("the gallery editor has an add button", root.innerHTML.includes("Add image"));
 check("the gallery editor has a save button", root.innerHTML.includes("Save Gallery"));
+
+/* --- daily slogan editor ------------------------------------------------- */
+check("the Daily Slogan tab opens", clickTab("Daily Slogan"));
+await new Promise((r) => setTimeout(r, 200));
+check("the slogan editor loads the bundled slogan", root.innerHTML.includes("Our Philosophy of Wellness"));
+check("the slogan editor shows Sanskrit text", root.innerHTML.includes("स्वस्थस्य स्वास्थ्य रक्षणं"));
+check("the slogan editor offers visibility and scheduling", root.innerHTML.includes("Show from (optional)") && root.innerHTML.includes("Hide after (optional)"));
+check("the slogan editor has draft and publish controls", root.innerHTML.includes("Save Draft") && root.innerHTML.includes("Publish"));
+
+check("the slogan preview opens", clickButton("Preview"));
+await new Promise((r) => setTimeout(r, 150));
+check("the preview renders the slogan scroll", Boolean(root.querySelector(".admin-slogan-preview .slogan-scroll")));
+
+check("saving the slogan draft can be triggered", clickButton("Save Draft"));
+await new Promise((r) => setTimeout(r, 250));
+check(
+  "saving the draft sends the slogan section",
+  Boolean(calls.contentPut && calls.contentPut.slogan && calls.contentPut.slogan.draft)
+);
+check(
+  "saving a draft keeps the draft and published entries separate",
+  Boolean(
+    calls.contentPut &&
+      calls.contentPut.slogan &&
+      calls.contentPut.slogan.published &&
+      calls.contentPut.slogan.published.status === "published" &&
+      calls.contentPut.slogan.draft.status === "draft"
+  )
+);
+
+check("publishing the slogan can be triggered", clickButton("Publish"));
+await new Promise((r) => setTimeout(r, 250));
+check(
+  "publishing sends a published slogan",
+  Boolean(
+    calls.contentPut &&
+      calls.contentPut.slogan &&
+      calls.contentPut.slogan.published &&
+      calls.contentPut.slogan.published.status === "published"
+  )
+);
+check(
+  "publishing keeps the multilingual text",
+  Boolean(calls.contentPut && calls.contentPut.slogan.published.sanskrit.includes("स्वस्थस्य"))
+);
+check("the publish confirmation is shown", root.innerHTML.includes("now live on the homepage"));
+check("an unpublish control appears after publishing", root.innerHTML.includes("Unpublish"));
+
+check("unpublishing the slogan can be triggered", clickButton("Unpublish"));
+await new Promise((r) => setTimeout(r, 250));
+check(
+  "unpublishing clears the published slogan",
+  Boolean(calls.contentPut && calls.contentPut.slogan && calls.contentPut.slogan.published === null)
+);
 
 /* --- saving ------------------------------------------------------------- */
 check("the Diseases tab opens for saving", clickTab("Diseases"));

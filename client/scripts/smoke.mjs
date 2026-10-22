@@ -76,9 +76,18 @@ if (isHome) {
   check("renders doctor name", html.includes("Dr. B. Neeraj Kalkin"));
   check("renders BAMS qualification", html.includes("BAMS"));
   check("renders location", html.includes("Pasupathipalayam"));
+  check("new clinic logo renders", html.includes("brand-logo"));
+  check("desktop navigation renders with Medicines link", html.includes("site-nav") && html.includes("Medicines"));
   check("counters band renders", html.includes("counters-band"));
+  check("verified stats heading renders", html.includes("Qualification you can check"));
+  check("scroll-grown tree renders", html.includes("growth-band") && html.includes("growth-tree"));
+  check("growth journey renders", html.includes("Roots in tradition"));
   check("credentials band renders", html.includes("Credentials &amp; Registration") || html.includes("Credentials & Registration"));
   check("about band renders (brown About Us button)", html.includes("btn--brown") && html.includes("About Us"));
+  check("daily slogan scroll renders", html.includes("slogan-scroll") && html.includes("slogan-parchment"));
+  check("slogan heading renders", html.includes("Our Philosophy of Wellness"));
+  check("slogan Sanskrit renders as text", html.includes("स्वस्थस्य स्वास्थ्य रक्षणं"));
+  check("slogan languages carry lang attributes", html.includes('lang="sa"') && html.includes('lang="en"'));
   check("treatments heading renders", html.includes("Treatments Offered"));
   check("treatment marquee renders", html.includes("marquee__item") && html.includes("Panchakarma Detox"));
   check("why grid renders", html.includes("Why Patients Choose Us") && html.includes("why-box"));
@@ -95,7 +104,7 @@ if (isHome) {
   check("doctor photo path wired", html.includes("/images/doctor.jpg"));
   check("clinic photo path wired", html.includes("/images/clinic.jpg"));
   check("books via WhatsApp", html.includes("Book an Appointment"));
-  check("products band renders", html.includes("Our Products") && html.includes("product-card"));
+  check("medicines band renders", html.includes("Our Medicines") && html.includes("product-card"));
   check("diseases carousel band renders", html.includes("carousel__item") && html.includes("dcard"));
   check("condition cards link with Learn More", html.includes("Learn More"));
 } else if (pathname === "/admin") {
@@ -119,8 +128,15 @@ if (isHome) {
   check("product detail shows usage", html.includes("How it is used"));
   check("product detail shows disclaimer", html.includes("disclaimer__label"));
   check("product detail links to WhatsApp", html.includes("wa.me/919629907763"));
+} else if (pathname === "/treatments") {
+  check("treatment page hero renders", html.includes("page-hero") && html.includes("Treatments Offered"));
+  check("treatment area index renders", html.includes("treatment-index"));
+  check("treatments are grouped by area", html.includes("treatment-group") && html.includes("Panchakarma"));
+  check("treatment expectations render", html.includes("What to expect") && html.includes("tcard__includes"));
+  check("individual assessment note renders", html.includes("Not every therapy is suitable"));
 } else if (pathname === "/diseases") {
   check("disease cards render", html.includes("dcard") && html.includes("disease-grid"));
+  check("conditions are grouped by area", html.includes("disease-group") && html.includes("Respiratory"));
   check("carousel renders", html.includes("carousel__track"));
   check("disease image wired", html.includes("/images/diseases/asthma.jpg"));
   check("filter chips render", html.includes("filter-chip"));

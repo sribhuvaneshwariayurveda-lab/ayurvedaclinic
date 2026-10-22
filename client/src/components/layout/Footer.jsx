@@ -1,17 +1,25 @@
 import { Link } from "react-router-dom";
 import { useContent } from "../../data/store.js";
-import { IconLeaf, IconMapPin, IconPhone, IconWhatsApp } from "../ui/Icons.jsx";
+import { IconMapPin, IconPhone, IconWhatsApp } from "../ui/Icons.jsx";
+import BrandLogo from "../ui/BrandLogo.jsx";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
+
+const secondaryNav = [
+  { label: "Gallery", to: "/gallery" },
+  { label: "FAQs", to: "/faqs" },
+  { label: "Case Studies", to: "/case-studies" }
+];
 
 export default function Footer() {
   const { clinic, nav } = useContent();
+  const footerNav = [...(nav || []), ...secondaryNav];
 
   return (
     <>
       <nav className="footer-nav" aria-label="Footer">
         <div className="container">
           <ul className="footer-nav__list">
-            {(nav || []).map((item) => (
+            {footerNav.map((item) => (
               <li key={item.to}>
                 <Link className="footer-nav__link" to={item.to}>
                   {item.label}
@@ -27,7 +35,7 @@ export default function Footer() {
           <div className="site-footer__grid">
             <div>
               <div className="site-footer__brand">
-                <IconLeaf width={64} height={64} aria-hidden="true" />
+                <BrandLogo />
                 <span>
                   <span className="site-footer__clinic">{clinic?.name}</span>
                 </span>
@@ -46,7 +54,7 @@ export default function Footer() {
             <div>
               <h4>Explore</h4>
               <div className="site-footer__links">
-                {(nav || []).map((item) => (
+                {footerNav.map((item) => (
                   <Link key={item.to} to={item.to}>
                     {item.label}
                   </Link>

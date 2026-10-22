@@ -8,10 +8,27 @@ import SectionHeading from "../components/ui/SectionHeading.jsx";
 import { IconWhatsApp } from "../components/ui/Icons.jsx";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../lib/whatsapp.js";
 
+const groupNotes = {
+  Respiratory: "Breathing, sinus and seasonal respiratory concerns.",
+  "Skin & Scalp": "Support for recurring skin, scalp and hair concerns.",
+  Digestive: "Digestion, appetite, acidity and bowel-related concerns.",
+  Metabolic: "Support alongside medical care for longer-term metabolic health.",
+  Musculoskeletal: "Joint, muscle and movement-related concerns.",
+  Urinary: "Urinary and kidney-related concerns, alongside medical advice.",
+  Vascular: "Circulation and vascular concerns, assessed individually.",
+  Reproductive: "Supportive care for reproductive and hormonal health."
+};
+
+const slugify = (value) =>
+  String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 /**
  * "Diseases We Specialise In" — an educational overview of the conditions
- * the clinic sees most often, with a carousel, a filterable grid and a link
- * to each condition's detail page.
+ * the clinic sees most often, with a carousel, a filterable grouped grid and
+ * a link to each condition's detail page.
  *
  * Nothing on this page is a medical claim: each condition links to its own
  * page carrying the full disclaimer.
@@ -28,6 +45,13 @@ export default function DiseasesPage() {
     () => (filter === "All" ? items : items.filter((i) => i.category === filter)),
     [items, filter]
   );
+
+  const grouped = useMemo(() => {
+    const order = filter === "All" ? categories.filter((c) => c !== "All") : [filter];
+    return order
+      .map((cat) => ({ cat, entries: visible.filter((item) => item.category === cat) }))
+      .filter((group) => group.entries.length > 0);
+  }, [categories, filter, visible]);
 
   return (
     <>
@@ -78,13 +102,33 @@ export default function DiseasesPage() {
             ))}
           </div>
 
-          <div className="disease-grid">
-            {visible.map((item, i) => (
-              <Reveal key={item.slug} delay={i % 3} className="disease-grid__item">
-                <DiseaseCard item={item} />
-              </Reveal>
-            ))}
-          </div>
+          {grouped.map((group, groupIndex) => (
+            <section
+              key={group.cat}
+              className="disease-group"
+              aria-labelledby={`condition-group-${slugify(group.cat)}`}
+            >
+              <div className="disease-group__head">
+                <div className="disease-group__label">
+                  <span className="disease-group__count">
+                    {String(groupIndex + 1).padStart(2, "0")}
+                  </span>
+                  <h2 id={`condition-group-${slugify(group.cat)}`}>{group.cat}</h2>
+                </div>
+                <p>
+                  {groupNotes[group.cat] || "Educational information with individual assessment advised."}
+                </p>
+              </div>
+
+              <div className="disease-grid">
+                {group.entries.map((item, i) => (
+                  <Reveal key={item.slug} delay={i % 3} className="disease-grid__item">
+                    <DiseaseCard item={item} />
+                  </Reveal>
+                ))}
+              </div>
+            </section>
+          ))}
 
           {visible.length === 0 ? (
             <p className="section-desc center" style={{ marginInline: "auto" }}>

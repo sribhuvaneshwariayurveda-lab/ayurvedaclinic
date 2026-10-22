@@ -47,8 +47,8 @@
   /* --- Layout --- */
   --container: 1140px;
   --container-narrow: 820px;
-  --banner-h: 290px;
-  --banner-h-sm: 180px;
+  --banner-h: 92px;
+  --banner-h-sm: 74px;
 
   /* --- Radius --- */
   --radius-sm: 8px;

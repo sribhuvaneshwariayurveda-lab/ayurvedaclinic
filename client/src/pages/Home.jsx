@@ -1,13 +1,15 @@
+import DailySlogan from "../components/home/DailySlogan.jsx";
+import GrowingTree from "../components/home/GrowingTree.jsx";
 import {
   AboutBand,
   ContactBand,
-  Counters,
   Credentials,
   CtaBand,
   DiseasesCarouselBand,
   HomeFaq,
   PowerBand,
   ProductsBand,
+  StatsBand,
   TestimonialsBand,
   TreatmentsMarquee,
   WhyGrid
@@ -16,9 +18,11 @@ import {
 export default function Home() {
   return (
     <>
-      <Counters />
-      <Credentials />
+      <StatsBand />
+      <GrowingTree />
       <AboutBand />
+      <DailySlogan />
+      <Credentials />
       <TreatmentsMarquee />
       <ProductsBand />
       <DiseasesCarouselBand />

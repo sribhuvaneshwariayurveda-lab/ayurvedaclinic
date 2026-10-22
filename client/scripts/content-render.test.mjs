@@ -60,7 +60,23 @@ const STORED_CONTENT = {
   testimonials: [
     { quote: "My knee pain settled down after the course of oils.", name: "S. Ramasamy", treatment: "Joint care" },
     { quote: "The clinic explained every step of the treatment.", name: "", treatment: "" }
-  ]
+  ],
+  slogan: {
+    published: {
+      heading: "A stored daily thought",
+      english: "Stored English line.",
+      tamil: "சேமிக்கப்பட்ட தமிழ் வரி.",
+      sanskrit: "स्वस्थस्य स्वास्थ्य रक्षणं",
+      meaning: "Stored meaning.",
+      description: "Stored supporting note.",
+      visible: true,
+      status: "published",
+      startAt: "",
+      endAt: "",
+      publishedAt: "2026-01-01T00:00:00.000Z"
+    },
+    updatedAt: "2026-01-01T00:00:00.000Z"
+  }
 };
 
 /* --- one route ------------------------------------------------------------ */
@@ -134,6 +150,11 @@ async function runRoute(route) {
     check("an unnamed testimonial is shown as anonymous", html.includes("Anonymous"));
     check("the consent note is rendered", html.includes("written consent"));
     check("the testimonial card is styled", html.includes("testi-card"));
+    check("the stored slogan heading is rendered", html.includes("A stored daily thought"));
+    check("the stored Sanskrit slogan is rendered", html.includes("स्वस्थस्य स्वास्थ्य रक्षणं"));
+    check("the stored Tamil slogan is rendered", html.includes("சேமிக்கப்பட்ட தமிழ் வரி."));
+    check("the stored slogan note is rendered", html.includes("Stored supporting note."));
+    check("the slogan is rendered as a scroll", html.includes("slogan-parchment") && html.includes("slogan-roller"));
     check("no runtime errors on the home page", errors.length === 0);
   }
 }

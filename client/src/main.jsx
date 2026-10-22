@@ -8,6 +8,8 @@ import "./styles/motion.css";
 import "./styles/components.css";
 import "./styles/cinema.css";
 import "./styles/content.css";
+import "./styles/revamp.css";
+import "./styles/slogan.css";
 
 window.__SBAP_BOOTED__ = true;
 initMotion();

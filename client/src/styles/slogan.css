@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Daily Ayurveda slogan — a CSS-built parchment on wooden rollers.
+   No screenshot is used as a background; all text stays real and editable.
+   ========================================================================== */
+
+.slogan-band {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(2.6rem, 6vw, 5.5rem);
+  background:
+    radial-gradient(800px 420px at 14% 18%, rgba(201, 162, 75, 0.16), transparent 68%),
+    radial-gradient(720px 460px at 88% 82%, rgba(124, 201, 13, 0.1), transparent 70%),
+    linear-gradient(180deg, #fbf4dc 0%, #f7edcf 48%, #fbf6e6 100%);
+}
+
+.slogan-band::before,
+.slogan-band::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.slogan-band::before {
+  width: 380px;
+  height: 380px;
+  left: -190px;
+  bottom: -190px;
+  border: 1px solid rgba(169, 132, 47, 0.2);
+  box-shadow: 0 0 0 26px rgba(169, 132, 47, 0.04), 0 0 0 52px rgba(169, 132, 47, 0.025);
+}
+
+.slogan-band::after {
+  width: 260px;
+  height: 260px;
+  right: -130px;
+  top: -130px;
+  background: radial-gradient(circle, rgba(20, 78, 31, 0.07), transparent 66%);
+}
+
+.slogan-band__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.slogan-reveal {
+  width: min(100%, 900px);
+}
+
+.slogan-scroll {
+  position: relative;
+  padding-block: 24px;
+  filter: drop-shadow(0 26px 34px rgba(87, 62, 19, 0.17));
+}
+
+/* ---------- Wooden rollers ------------------------------------------------ */
+.slogan-roller {
+  position: absolute;
+  z-index: 2;
+  left: -3.2%;
+  right: -3.2%;
+  height: 24px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 34%),
+    repeating-linear-gradient(90deg, rgba(64, 35, 9, 0.13) 0 2px, transparent 2px 24px),
+    linear-gradient(180deg, #a66d34 0%, #7c471d 45%, #5a2f10 100%);
+  border: 1px solid #4d280d;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -4px 7px rgba(51, 25, 5, 0.38),
+    0 6px 12px rgba(70, 43, 12, 0.28);
+}
+
+.slogan-roller--top {
+  top: 4px;
+}
+
+.slogan-roller--bottom {
+  bottom: 4px;
+}
+
+.slogan-roller__cap {
+  position: absolute;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background:
+    radial-gradient(circle at 36% 28%, #d6a362 0 12%, #8a5422 46%, #5b3010 78%);
+  border: 1px solid #4a270c;
+  box-shadow: 0 5px 10px rgba(55, 31, 8, 0.35);
+}
+
+.slogan-roller__cap::after {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #c99758, #6c3d15);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.slogan-roller__cap--left {
+  left: -8px;
+}
+
+.slogan-roller__cap--right {
+  right: -8px;
+}
+
+/* ---------- Parchment ----------------------------------------------------- */
+.slogan-parchment {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding: clamp(2.3rem, 5.4vw, 4.1rem) clamp(1.4rem, 7vw, 5.4rem) clamp(2rem, 4.6vw, 3.4rem);
+  text-align: center;
+  border-radius: 7px 7px 13px 13px;
+  border: 1px solid rgba(154, 112, 43, 0.3);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.72), transparent 58%),
+    radial-gradient(80% 60% at 100% 100%, rgba(201, 162, 75, 0.16), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(126, 89, 30, 0.028) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, rgba(126, 89, 30, 0.022) 0 1px, transparent 1px 7px),
+    linear-gradient(160deg, #fff9e8 0%, #f8ecc9 52%, #fdf6e2 100%);
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 252, 239, 0.55),
+    inset 0 0 44px rgba(139, 98, 31, 0.1),
+    0 4px 0 rgba(125, 84, 24, 0.12);
+}
+
+.slogan-parchment::before {
+  content: "";
+  position: absolute;
+  inset: 15px;
+  border: 1px solid rgba(150, 108, 38, 0.26);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.slogan-parchment::after {
+  content: "";
+  position: absolute;
+  inset: 19px;
+  border: 1px solid rgba(150, 108, 38, 0.1);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.slogan-leaf {
+  position: absolute;
+  width: clamp(70px, 11vw, 120px);
+  height: auto;
+  color: #6e7f42;
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.slogan-leaf--left {
+  left: -8px;
+  bottom: 4px;
+}
+
+.slogan-leaf--right {
+  right: -8px;
+  top: 4px;
+  transform: rotate(180deg);
+}
+
+.slogan-eyebrow {
+  display: inline-block;
+  font-family: var(--font-sub);
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.23em;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+}
+
+.slogan-heading {
+  margin: 0.45rem auto 0;
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: clamp(1.7rem, 3.8vw, 2.7rem);
+  font-style: italic;
+  line-height: 1.16;
+  color: var(--forest);
+  max-width: 20ch;
+}
+
+.slogan-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 1rem auto 1.25rem;
+  color: var(--gold-dark);
+}
+
+.slogan-ornament span {
+  display: block;
+  width: clamp(38px, 8vw, 78px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(169, 132, 47, 0.72));
+}
+
+.slogan-ornament span:last-child {
+  background: linear-gradient(90deg, rgba(169, 132, 47, 0.72), transparent);
+}
+
+.slogan-sanskrit {
+  margin: 0 auto;
+  max-width: 30ch;
+  font-family: "Noto Serif Devanagari", "Sanskrit Text", Georgia, serif;
+  font-size: clamp(1.22rem, 2.7vw, 1.82rem);
+  line-height: 1.85;
+  color: #4f3c1b;
+  white-space: pre-line;
+}
+
+.slogan-english {
+  margin: 0.9rem auto 0;
+  max-width: 38ch;
+  font-family: var(--font-accent);
+  font-size: clamp(1rem, 2vw, 1.24rem);
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--forest);
+}
+
+.slogan-tamil {
+  margin: 0.75rem auto 0;
+  max-width: 40ch;
+  font-family: "Noto Sans Tamil", "Latha", system-ui, sans-serif;
+  font-size: clamp(0.98rem, 2vw, 1.16rem);
+  line-height: 1.8;
+  color: #4f3c1b;
+  white-space: pre-line;
+}
+
+.slogan-meaning {
+  margin: 0.85rem auto 0;
+  max-width: 48ch;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #6b5a39;
+  white-space: pre-line;
+}
+
+.slogan-description {
+  margin: 1.15rem auto 0;
+  max-width: 58ch;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(150, 108, 38, 0.22);
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.slogan-endmark {
+  display: block;
+  margin-top: 0.9rem;
+  font-family: "Noto Serif Devanagari", Georgia, serif;
+  font-size: 0.95rem;
+  color: var(--gold-dark);
+  opacity: 0.8;
+}
+
+/* ---------- Admin editor -------------------------------------------------- */
+.admin-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin-bottom: 0.9rem;
+  cursor: pointer;
+}
+
+.admin-check input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  accent-color: var(--green-dark);
+  flex: none;
+}
+
+.admin-slogan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+}
+
+.admin-slogan-preview {
+  margin-top: 1rem;
+  padding: clamp(0.75rem, 2vw, 1.4rem);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fbf4dc, #f7edcf);
+  border: 1px solid var(--line);
+}
+
+.admin-slogan-preview .slogan-scroll {
+  filter: none;
+}
+
+@media (max-width: 720px) {
+  .slogan-scroll {
+    padding-block: 19px;
+  }
+
+  .slogan-roller {
+    left: -2%;
+    right: -2%;
+    height: 20px;
+  }
+
+  .slogan-roller__cap {
+    width: 28px;
+    height: 28px;
+  }
+
+  .slogan-roller__cap::after {
+    inset: 9px;
+  }
+
+  .slogan-parchment {
+    padding: 2.1rem 1.25rem 1.8rem;
+  }
+
+  .slogan-parchment::before {
+    inset: 10px;
+  }
+
+  .slogan-parchment::after {
+    inset: 13px;
+  }
+
+  .slogan-leaf {
+    width: 64px;
+    opacity: 0.28;
+  }
+
+  .slogan-heading {
+    max-width: 19ch;
+  }
+}
+
+@media (max-width: 420px) {
+  .slogan-roller__cap {
+    display: none;
+  }
+
+  .slogan-parchment {
+    padding-inline: 1.05rem;
+  }
+}

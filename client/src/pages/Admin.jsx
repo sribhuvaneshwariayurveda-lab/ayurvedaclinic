@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getContentSnapshot, saveContent } from "../data/store.js";
+import SloganScroll from "../components/slogan/SloganScroll.jsx";
+import { EMPTY_SLOGAN, isSloganActive } from "../lib/slogan.js";
 
 /**
  * Admin panel (unlinked from public navigation; open /admin directly).
@@ -76,8 +78,23 @@ function messageFor(status, data) {
 
 const deepCopy = (value) => JSON.parse(JSON.stringify(value));
 
+function normalizeSloganSection(stored, fallback) {
+  const section = stored && typeof stored === "object" ? stored : {};
+  const base = fallback && typeof fallback === "object" ? fallback : {};
+  // An explicit `published: null` (unpublished) must not fall back to the
+  // bundled default again, so check ownership rather than truthiness.
+  const hasStoredPublished = Object.prototype.hasOwnProperty.call(section, "published");
+  return {
+    published: hasStoredPublished ? section.published : base.published ?? null,
+    draft: deepCopy(section.draft || base.draft || EMPTY_SLOGAN),
+    updatedAt: section.updatedAt || base.updatedAt || ""
+  };
+}
+
 const TABS = [
   { id: "images", label: "Images" },
+  { id: "slogan", label: "Daily Slogan" },
+  { id: "stats", label: "Home Stats" },
   { id: "about", label: "About Us" },
   { id: "products", label: "Products" },
   { id: "diseases", label: "Diseases" },
@@ -94,6 +111,19 @@ function TextRow({ label, value, onChange, placeholder }) {
         type="text"
         value={value ?? ""}
         placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function DateTimeRow({ label, value, onChange }) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input
+        type="datetime-local"
+        value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
@@ -211,6 +241,8 @@ export default function Admin() {
 
   const [tab, setTab] = useState("images");
   const [draft, setDraft] = useState(null);
+  const [slogan, setSlogan] = useState(null);
+  const [sloganPreview, setSloganPreview] = useState(false);
   const [status, setStatus] = useState(null);
 
   const refreshFiles = async () => {
@@ -218,9 +250,23 @@ export default function Admin() {
     if (code === 200) setFiles(data.files || []);
   };
 
+  const loadSlogan = async () => {
+    const fallback = getContentSnapshot().slogan;
+    let stored = null;
+    try {
+      const { status: code, data } = await api("/api/admin/content");
+      if (code === 200 && data && typeof data === "object") stored = data.slogan;
+    } catch {
+      stored = null;
+    }
+    setSlogan(normalizeSloganSection(stored, fallback));
+    setSloganPreview(false);
+  };
+
   const loadDraft = () => {
     const content = getContentSnapshot();
     setDraft({
+      stats: deepCopy(content.stats || { items: [] }),
       about: deepCopy(content.about || {}),
       products: deepCopy(content.products || { items: [] }),
       diseases: deepCopy(content.diseases || { items: [] }),
@@ -238,6 +284,7 @@ export default function Admin() {
         if (code === 200 && data && data.authenticated) {
           setUser(data.username);
           loadDraft();
+          loadSlogan();
           refreshFiles();
         } else if (code === 503) {
           setError(messageFor(code, data));
@@ -269,6 +316,7 @@ export default function Admin() {
         setUser(data.username);
         setPassword("");
         loadDraft();
+        loadSlogan();
         refreshFiles();
       } else {
         setError(messageFor(code, data));
@@ -285,6 +333,8 @@ export default function Admin() {
     setUsername("");
     setPassword("");
     setDraft(null);
+    setSlogan(null);
+    setSloganPreview(false);
     setStatus(null);
   };
 
@@ -375,6 +425,42 @@ export default function Admin() {
     }
   };
 
+  const persistSlogan = async (next, label) => {
+    setSlogan(next);
+    setStatus({ kind: "busy", text: "Saving…" });
+    const res = await saveContent({ slogan: next });
+    if (res.ok) {
+      setStatus({ kind: "ok", text: `Saved. ${label}` });
+    } else {
+      setStatus({ kind: "error", text: messageFor(res.status, res.data) });
+    }
+  };
+
+  const onSaveSlogan = async (mode) => {
+    if (!slogan) return;
+    const draft = { ...(slogan.draft || EMPTY_SLOGAN), status: "draft" };
+    let next = { ...slogan, draft };
+
+    if (mode === "publish") {
+      const published = {
+        ...draft,
+        status: "published",
+        publishedAt: new Date().toISOString()
+      };
+      next = { ...next, published };
+    } else if (mode === "unpublish") {
+      next = { ...next, published: null };
+    }
+
+    const label =
+      mode === "publish"
+        ? "The slogan is now live on the homepage."
+        : mode === "unpublish"
+          ? "The slogan is no longer shown publicly."
+          : "Draft saved. It is not visible to visitors until you publish.";
+    await persistSlogan(next, label);
+  };
+
   /* ---- draft helpers --------------------------------------------------- */
   const setSection = (section) => (updater) => {
     setDraft((current) => {
@@ -428,6 +514,152 @@ export default function Admin() {
   })();
 
   /* ---- render ---------------------------------------------------------- */
+  const renderSloganEditor = () => {
+    if (!slogan) return <p className="section-desc">Loading slogan…</p>;
+    const entry = { ...EMPTY_SLOGAN, ...(slogan.draft || {}) };
+    const set = (key) => (value) =>
+      setSlogan((current) => ({
+        ...(current || {}),
+        draft: { ...EMPTY_SLOGAN, ...(current?.draft || {}), [key]: value }
+      }));
+    const hasPublished = Boolean(slogan.published);
+    const live = isSloganActive(slogan.published);
+
+    return (
+      <div className="admin-editor">
+        <div className="admin-editor__block">
+          <h3>Daily slogan</h3>
+          <div className="admin-editor__row">
+            <TextRow label="Heading" value={entry.heading} onChange={set("heading")} />
+          </div>
+          <TextAreaRow label="English text" value={entry.english} onChange={set("english")} rows={2} />
+          <TextAreaRow label="Tamil text (optional)" value={entry.tamil} onChange={set("tamil")} rows={2} />
+          <TextAreaRow label="Sanskrit text (optional)" value={entry.sanskrit} onChange={set("sanskrit")} rows={2} />
+          <TextAreaRow
+            label="English meaning (optional)"
+            value={entry.meaning}
+            onChange={set("meaning")}
+            rows={2}
+          />
+          <TextAreaRow
+            label="Supporting note (optional)"
+            value={entry.description}
+            onChange={set("description")}
+            rows={3}
+          />
+          <p className="admin-editor__hint">
+            Tamil, Sanskrit and every other language is stored as Unicode text. The homepage shows
+            whichever fields you fill in. This is plain text, so HTML markup is not accepted.
+          </p>
+        </div>
+
+        <div className="admin-editor__block">
+          <h3>Visibility and schedule</h3>
+          <label className="admin-check">
+            <input
+              type="checkbox"
+              checked={entry.visible !== false}
+              onChange={(e) => set("visible")(e.target.checked)}
+            />
+            <span>Show the slogan section on the homepage</span>
+          </label>
+          <div className="admin-editor__row">
+            <DateTimeRow label="Show from (optional)" value={entry.startAt} onChange={set("startAt")} />
+            <DateTimeRow label="Hide after (optional)" value={entry.endAt} onChange={set("endAt")} />
+          </div>
+          <p className="admin-editor__hint">
+            {!hasPublished
+              ? "No slogan is published yet. Visitors do not see this section until you publish."
+              : live
+                ? "A published slogan is live on the homepage now."
+                : "A published slogan exists, but it is currently hidden, scheduled for later, or past its end date."}
+          </p>
+        </div>
+
+        {sloganPreview ? (
+          <div className="admin-editor__block">
+            <h3>Preview</h3>
+            <p className="admin-editor__hint">
+              Preview of the draft exactly as it will appear after publishing.
+            </p>
+            <div className="admin-slogan-preview">
+              <SloganScroll slogan={entry} headingId="admin-slogan-preview-title" />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
+  const renderStatsEditor = () => {
+    if (!draft?.stats) return null;
+    const stats = draft.stats;
+    const items = Array.isArray(stats.items) ? stats.items : [];
+    const set = (key) => (value) => setSection("stats")((s) => ({ ...s, [key]: value }));
+    const update = (index, patch) => {
+      setSection("stats")((s) => {
+        const copy = (Array.isArray(s.items) ? s.items : []).slice();
+        copy[index] = { ...copy[index], ...patch };
+        return { ...s, items: copy };
+      });
+    };
+    const remove = (index) => {
+      setSection("stats")((s) => ({
+        ...s,
+        items: (Array.isArray(s.items) ? s.items : []).filter((_, i) => i !== index)
+      }));
+    };
+
+    return (
+      <div className="admin-editor">
+        <div className="admin-editor__block">
+          <h3>Section copy</h3>
+          <div className="admin-editor__row">
+            <TextRow label="Label" value={stats.label} onChange={set("label")} />
+            <TextRow label="Heading line" value={stats.title} onChange={set("title")} />
+          </div>
+          <p className="admin-editor__hint">
+            Only publish figures that the clinic can verify. Qualification, graduation year and
+            catalogue counts are safer than patient numbers or years-of-service claims.
+          </p>
+        </div>
+
+        <div className="admin-editor__block">
+          <h3>Figures ({items.length})</h3>
+          <div className="admin-editor__list">
+            {items.map((item, index) => (
+              <div className="admin-editor__item" key={index}>
+                <div className="admin-editor__listrow">
+                  <input
+                    type="text"
+                    value={item.value ?? ""}
+                    placeholder="Figure, e.g. BAMS"
+                    onChange={(e) => update(index, { value: e.target.value })}
+                  />
+                  <button className="btn btn--outline btn--sm" type="button" onClick={() => remove(index)}>
+                    Remove
+                  </button>
+                </div>
+                <TextRow
+                  label="Caption"
+                  value={item.label}
+                  onChange={(v) => update(index, { label: v })}
+                />
+              </div>
+            ))}
+          </div>
+          <button
+            className="btn btn--outline btn--sm"
+            type="button"
+            onClick={() => setSection("stats")((s) => ({ ...s, items: [...(s.items || []), { value: "", label: "" }] }))}
+          >
+            Add figure
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderAboutEditor = () => {
     if (!draft?.about) return null;
     const about = draft.about;
@@ -1028,8 +1260,9 @@ export default function Admin() {
           </span>
           <h1>Clinic admin panel</h1>
           <p>
-            Sign in to manage the About Us page, the product list, the conditions we cover and the
-            images used across the site. Changes are saved to the server and appear immediately.
+            Sign in to manage the homepage figures, the About Us page, the product list, the
+            conditions we cover and the images used across the site. Changes are saved to the server
+            and appear immediately.
           </p>
         </div>
       </section>
@@ -1147,6 +1380,58 @@ export default function Admin() {
                     )}
                   </div>
                 </div>
+              ) : null}
+
+              {tab === "slogan" ? (
+                <>
+                  {renderSloganEditor()}
+                  <div className="admin-slogan-actions">
+                    <button
+                      className="btn btn--outline btn--sm"
+                      type="button"
+                      onClick={() => setSloganPreview((value) => !value)}
+                    >
+                      {sloganPreview ? "Hide Preview" : "Preview"}
+                    </button>
+                    <button
+                      className="btn btn--outline btn--sm"
+                      type="button"
+                      disabled={status?.kind === "busy"}
+                      onClick={() => onSaveSlogan("draft")}
+                    >
+                      Save Draft
+                    </button>
+                    <button
+                      className="btn btn--green btn--sm"
+                      type="button"
+                      disabled={status?.kind === "busy"}
+                      onClick={() => onSaveSlogan("publish")}
+                    >
+                      Publish
+                    </button>
+                    {slogan?.published ? (
+                      <button
+                        className="btn btn--outline btn--sm"
+                        type="button"
+                        disabled={status?.kind === "busy"}
+                        onClick={() => onSaveSlogan("unpublish")}
+                      >
+                        Unpublish
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+
+              {tab === "stats" ? (
+                <>
+                  {renderStatsEditor()}
+                  <div style={{ marginTop: "1.4rem" }}>
+                    <button className="btn btn--green" type="button" onClick={() => onSave({ stats: draft.stats }, "Home Stats")}>
+                      Save Home Stats
+                    </button>
+                  </div>
+                </>
               ) : null}
 
               {tab === "about" ? (
