@@ -1,0 +1,81 @@
+/* ---------- One-shot falling leaves over the home hero ---------- */
+.falling-leaves {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.falling-leaf {
+  position: absolute;
+  top: -8%;
+  left: var(--left);
+  display: block;
+  width: var(--size);
+  opacity: 0;
+  animation: sbap-leaf-fall var(--duration) cubic-bezier(0.42, 0.02, 0.58, 0.98) var(--delay) 1 both;
+  transform-origin: 50% 42%;
+  will-change: transform, opacity;
+}
+
+.falling-leaf svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: rotate(var(--tilt));
+  filter: drop-shadow(0 3px 4px rgba(20, 78, 31, 0.18));
+}
+
+.falling-leaf--deep {
+  --leaf-color: #2f6f35;
+}
+.falling-leaf--fresh {
+  --leaf-color: #4f963d;
+}
+.falling-leaf--lime {
+  --leaf-color: #7cc90d;
+}
+.falling-leaf--olive {
+  --leaf-color: #708b35;
+}
+.falling-leaf--light {
+  --leaf-color: #9ac85a;
+}
+
+@keyframes sbap-leaf-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0) rotate(0deg);
+  }
+  7% {
+    opacity: 0.92;
+  }
+  24% {
+    transform: translate3d(var(--sway), 22vh, 0) rotate(calc(var(--spin) * 0.18));
+  }
+  50% {
+    transform: translate3d(calc(var(--sway) * -0.6), 47vh, 0) rotate(calc(var(--spin) * 0.46));
+  }
+  76% {
+    transform: translate3d(calc(var(--sway) * 0.9), 72vh, 0) rotate(calc(var(--spin) * 0.74));
+  }
+  92% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), 98vh, 0) rotate(var(--spin));
+  }
+}
+
+[data-motion="off"] .falling-leaves {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-leaves {
+    display: none;
+  }
+}

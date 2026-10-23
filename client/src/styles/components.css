@@ -8,7 +8,7 @@
   z-index: 150;
   color: #fff;
   overflow: hidden;
-  padding-block: clamp(16px, 1.5vw, 24px);
+  padding-block: clamp(18px, 1.6vw, 26px);
   box-shadow: var(--shadow-band);
   background:
     radial-gradient(1100px 340px at 12% -30%, rgba(124, 201, 13, 0.35), transparent 60%),
@@ -31,13 +31,13 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1400px;
-  min-height: 100px;
+  max-width: 1600px;
+  min-height: 116px;
   margin-inline: auto;
-  padding-inline: clamp(16px, 2vw, 28px);
+  padding-inline: clamp(16px, 2vw, 30px);
   display: flex;
   align-items: center;
-  gap: clamp(0.9rem, 1.8vw, 1.8rem);
+  gap: clamp(0.9rem, 1.35vw, 1.35rem);
 }
 
 .brand-logo {
@@ -52,16 +52,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   margin-left: auto;
 }
 
 .site-nav a {
   position: relative;
-  padding: 0.5rem 0.58rem;
+  padding: 0.5rem 0.64rem;
   border-radius: 999px;
   font-family: var(--font-sub);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 600;
   letter-spacing: 0.035em;
   color: rgba(255, 255, 255, 0.8);
@@ -108,13 +108,13 @@
 
 .brand-center__mark {
   width: auto;
-  height: clamp(70px, 5.4vw, 88px);
-  max-width: min(400px, 38vw);
+  height: clamp(88px, 6.25vw, 100px);
+  max-width: min(540px, 42vw);
   object-fit: contain;
   padding: 4px 8px;
   border-radius: 12px;
   background: #fff;
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.32));
+  filter: drop-shadow(0 7px 18px rgba(0, 0, 0, 0.34));
 }
 
 .nametag {
@@ -123,20 +123,17 @@
   align-items: flex-start;
   gap: 0.1rem;
   min-width: 0;
-  overflow: hidden;
 }
 
 .nametag__name {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-family: var(--font-head);
   font-weight: 600;
-  font-size: clamp(1.02rem, 1.45vw, 1.38rem);
+  font-size: clamp(1.04rem, 1.3vw, 1.34rem);
   letter-spacing: 0.015em;
   color: #fff;
-  line-height: 1.18;
+  line-height: 1.15;
+  text-wrap: balance;
 }
 
 .nametag__tag {
@@ -886,7 +883,7 @@
     gap: 0.38rem;
   }
   .brand-center__mark {
-    width: clamp(210px, 68vw, 280px);
+    width: clamp(260px, 68vw, 320px);
     height: auto;
     max-width: 100%;
     padding: 4px 7px;
@@ -901,7 +898,7 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     white-space: normal;
-    font-size: clamp(0.78rem, 3vw, 0.9rem);
+    font-size: clamp(0.82rem, 3.1vw, 0.94rem);
     line-height: 1.22;
   }
   .nametag__tag {
@@ -924,7 +921,7 @@
     bottom: 0;
     z-index: 220;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     align-items: stretch;
     padding: 5px 5px calc(5px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid rgba(20, 78, 31, 0.1);
@@ -976,10 +973,62 @@
     transform: none;
   }
 }
-@media (min-width: 1221px) and (max-width: 1420px) {
+@media (max-width: 1024px) and (min-width: 721px) {
+  .brand-center__mark {
+    height: clamp(72px, 8vw, 88px);
+    max-width: min(440px, 52vw);
+  }
+
+  .nametag__name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    font-size: clamp(0.98rem, 1.7vw, 1.18rem);
+  }
+}
+
+@media (max-width: 860px) and (min-width: 721px) {
+  .call-now span {
+    display: none;
+  }
+
+  .call-now {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .mobile-dock__link {
+    padding-inline: 0;
+    font-size: clamp(0.54rem, 2.35vw, 0.64rem);
+  }
+}
+
+@media (max-width: 360px) {
+  .site-header__inner {
+    gap: 6px;
+    padding-inline: 10px;
+  }
+
+  .call-now {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1221px) and (max-width: 1439px) {
+  .site-header {
+    padding-block: 12px;
+  }
+
   .site-header__inner {
     flex-wrap: wrap;
-    padding-block: 8px;
+    padding-block: 4px;
+    row-gap: 4px;
   }
 
   .site-nav {

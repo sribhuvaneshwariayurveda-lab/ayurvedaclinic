@@ -4,6 +4,7 @@ import { useContent } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
 import BrandLogo from "../ui/BrandLogo.jsx";
 import {
+  IconFlask,
   IconHeart,
   IconHome,
   IconLeaf,
@@ -19,6 +20,7 @@ const mobileNav = [
   { label: "About Us", to: "/about", Icon: IconUsers },
   { label: "Diseases", to: "/diseases", Icon: IconHeart },
   { label: "Treatments", to: "/treatments", Icon: IconLeaf },
+  { label: "Products", to: "/products", Icon: IconFlask },
   { label: "Contact Us", to: "/contact", Icon: IconPhone }
 ];
 

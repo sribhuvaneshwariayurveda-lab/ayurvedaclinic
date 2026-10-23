@@ -78,7 +78,17 @@ if (isHome) {
   check("renders location", html.includes("Pasupathipalayam"));
   check("exact clinic logo asset renders", html.includes("brand-logo") && html.includes("/images/clinic-logo.jpeg"));
   check("hero renders with both calls to action", html.includes("home-hero") && html.includes("Book an Appointment") && html.includes("Explore Treatments"));
-  check("desktop navigation renders with requested labels", html.includes("site-nav") && html.includes("Medicines") && html.includes("Treatments Offered") && html.includes("Diseases Treated"));
+  const primaryNav = html.split('class="site-nav"')[1]?.split("</nav>")[0] || "";
+  const navLabels = ["Home", "About Us", "Diseases", "Treatments", "Products", "Contact Us"];
+  const navPositions = navLabels.map((label) => primaryNav.indexOf(`>${label}<`));
+  check(
+    "desktop navigation renders six requested labels in order",
+    navPositions.every((position, index) => position >= 0 && (index === 0 || position > navPositions[index - 1]))
+  );
+  const leafCount = (html.match(/class="falling-leaf falling-leaf--/g) || []).length;
+  check("falling leaf intro renders 5-9 leaves", leafCount >= 5 && leafCount <= 9);
+  const mobileDock = html.split('class="mobile-dock"')[1]?.split("</nav>")[0] || "";
+  check("mobile navigation includes Products", mobileDock.includes(">Products<"));
   check("counters band renders", html.includes("counters-band"));
   check("four requested statistics render", html.includes("2K+") && html.includes("Patients Treated") && html.includes("1.8K+") && html.includes("46K+"));
   check("statistics count-up component renders", html.includes("countup"));

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useContentSection } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
 import { IconArrowRight, IconCalendar, IconCheck } from "../ui/Icons.jsx";
+import FallingLeaves from "../ui/FallingLeaves.jsx";
 import Reveal from "../ui/Reveal.jsx";
 
 export default function HomeHero() {
@@ -13,6 +14,7 @@ export default function HomeHero() {
 
   return (
     <section className="home-hero" aria-label={`${clinic?.name || "Clinic"} introduction`}>
+      <FallingLeaves />
       <div className="container home-hero__grid">
         <Reveal className="home-hero__copy">
           <span className="section-sub">{hero?.label}</span>

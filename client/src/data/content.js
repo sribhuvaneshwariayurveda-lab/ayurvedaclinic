@@ -55,10 +55,10 @@ export const siteSettings = {
 export const nav = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/about" },
-  { label: "Medicines", to: "/products" },
-  { label: "Treatments Offered", to: "/treatments" },
-  { label: "Diseases Treated", to: "/diseases" },
-  { label: "Contact / Book Appointment", to: "/contact" }
+  { label: "Diseases", to: "/diseases" },
+  { label: "Treatments", to: "/treatments" },
+  { label: "Products", to: "/products" },
+  { label: "Contact Us", to: "/contact" }
 ];
 
 export const hero = {
