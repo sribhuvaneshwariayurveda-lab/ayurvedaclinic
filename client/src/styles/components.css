@@ -31,7 +31,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: var(--container);
+  max-width: 1320px;
   min-height: 66px;
   margin-inline: auto;
   padding-inline: 20px;
@@ -43,6 +43,9 @@
 .brand-logo {
   display: block;
   flex: none;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .site-nav {
@@ -55,10 +58,10 @@
 
 .site-nav a {
   position: relative;
-  padding: 0.55rem 0.72rem;
+  padding: 0.5rem 0.58rem;
   border-radius: 999px;
   font-family: var(--font-sub);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.035em;
   color: rgba(255, 255, 255, 0.8);
@@ -100,12 +103,16 @@
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
+  flex: 0 1 auto;
 }
 
 .brand-center__mark {
-  width: 56px;
-  height: 56px;
-  color: var(--gold-1);
+  width: auto;
+  height: clamp(55px, 4.2vw, 65px);
+  max-width: min(300px, 36vw);
+  padding: 3px 6px;
+  border-radius: 10px;
+  background: #fff;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
 }
 
@@ -115,9 +122,14 @@
   align-items: flex-start;
   gap: 0.1rem;
   min-width: 0;
+  overflow: hidden;
 }
 
 .nametag__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--font-head);
   font-weight: 600;
   font-size: clamp(0.95rem, 1.5vw, 1.22rem);
@@ -251,9 +263,9 @@
 }
 
 .offcanvas__mark {
-  width: 40px;
+  width: auto;
   height: 40px;
-  color: var(--green-dark);
+  max-width: 180px;
 }
 
 .offcanvas__close {
@@ -365,10 +377,13 @@
   margin-bottom: 1rem;
 }
 
-.site-footer__brand svg {
-  width: 64px;
-  height: 64px;
-  color: #fff;
+.site-footer__brand .brand-logo {
+  width: auto;
+  height: 56px;
+  max-width: 240px;
+  padding: 3px 7px;
+  border-radius: 9px;
+  background: #fff;
 }
 
 .site-footer__since {
@@ -752,7 +767,7 @@
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1220px) {
   .site-nav {
     display: none;
   }
@@ -783,8 +798,9 @@
     padding-inline: 14px;
   }
   .brand-center__mark {
-    width: 44px;
+    width: auto;
     height: 44px;
+    max-width: 46vw;
   }
   .nametag__name {
     font-size: 0.91rem;
@@ -835,5 +851,18 @@
   .call-now:hover,
   .footer-nav__link:hover {
     transform: none;
+  }
+}
+@media (min-width: 1221px) and (max-width: 1420px) {
+  .site-header__inner {
+    flex-wrap: wrap;
+    padding-block: 8px;
+  }
+
+  .site-nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: center;
   }
 }

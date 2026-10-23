@@ -32,6 +32,11 @@ export function conditionEnquiryMessage(condition) {
   return `Hello ${clinicInfo().name}, I would like to know more about Ayurvedic care for ${condition}.`;
 }
 
+/** An enquiry about one of the treatments listed on the site. */
+export function treatmentEnquiryMessage(treatment) {
+  return `Hello ${clinicInfo().name}, I would like to know more about ${treatment} at the clinic.`;
+}
+
 /** An enquiry about one of the clinic products. */
 export function productEnquiryMessage(product) {
   return `Hello ${clinicInfo().name}, I would like to know more about the ${product} available at the clinic.`;

@@ -18,6 +18,7 @@ import Reveal from "../ui/Reveal.jsx";
 import Carousel from "../ui/Carousel.jsx";
 import DiseaseCard from "../diseases/DiseaseCard.jsx";
 import ProductCard from "../products/ProductCard.jsx";
+import CountUp from "../ui/CountUp.jsx";
 import AppointmentForm from "./AppointmentForm.jsx";
 
 /* Illustrative imagery for each treatment (clinic botanical assets). */
@@ -32,11 +33,10 @@ const treatmentImages = [
 
 /* ------------------------------------------------------------- Home stats */
 const fallbackStats = [
-  { value: "BAMS", label: "Qualified Ayurvedic physician" },
-  { value: "2023", label: "Graduated · M.G.R. University" },
-  { value: "2+ yrs", label: "Clinical experience" },
-  { value: "18", label: "Conditions supported" },
-  { value: "10", label: "Clinic medicines" }
+  { value: "2K+", label: "Patients Treated" },
+  { value: "2+ Decades", label: "Years of Trusted Service" },
+  { value: "1.8K+", label: "In-house Herbal Medicines" },
+  { value: "46K+", label: "Treatments & Therapies Offered" }
 ];
 
 export function StatsBand() {
@@ -47,12 +47,14 @@ export function StatsBand() {
       <div className="container">
         <Reveal className="stats-band__head">
           <span className="section-sub">{stats?.label || "The clinic at a glance"}</span>
-          <p>{stats?.title || "Qualification you can check. Care you can feel."}</p>
+          <p>{stats?.title || "Care measured in experience, tradition and trust."}</p>
         </Reveal>
         <div className="counters-band__grid stats-band__grid">
           {items.map((item, i) => (
-            <Reveal key={`${item.value}-${item.label}`} delay={i % 5} className="counter stats-band__item">
-              <div className="counter__num">{item.value}</div>
+            <Reveal key={`${item.value}-${item.label}`} delay={i % 4} className="counter stats-band__item">
+              <div className="counter__num">
+                <CountUp value={item.value} />
+              </div>
               <div className="counter__title">{item.label}</div>
             </Reveal>
           ))}
@@ -197,6 +199,13 @@ export function TreatmentsMarquee() {
           {rowB.map((t) => (
             <Item key={`b2-${t.title}`} t={t} />
           ))}
+        </div>
+      </div>
+      <div className="container">
+        <div className="disease-cta">
+          <Link className="btn btn--forest" to="/treatments">
+            Explore All Treatments
+          </Link>
         </div>
       </div>
     </>

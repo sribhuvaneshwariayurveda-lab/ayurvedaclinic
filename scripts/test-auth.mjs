@@ -35,7 +35,7 @@ function makeHashWithParams(password, { N, r, p }) {
 
 function startServer(env) {
   /* Hermetic: never inherit a real ADMIN_* value from the developer's shell. */
-  const base = { ...process.env };
+  const base = { ...process.env, SBAP_SKIP_LOCAL_ENV: "1" };
   delete base.ADMIN_USERNAME;
   delete base.ADMIN_PASSWORD;
   delete base.ADMIN_PASSWORD_HASH;

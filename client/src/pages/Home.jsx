@@ -1,5 +1,6 @@
 import DailySlogan from "../components/home/DailySlogan.jsx";
 import GrowingTree from "../components/home/GrowingTree.jsx";
+import HomeHero from "../components/home/HomeHero.jsx";
 import {
   AboutBand,
   ContactBand,
@@ -18,13 +19,14 @@ import {
 export default function Home() {
   return (
     <>
+      <HomeHero />
       <StatsBand />
       <GrowingTree />
       <AboutBand />
       <DailySlogan />
       <Credentials />
-      <TreatmentsMarquee />
       <ProductsBand />
+      <TreatmentsMarquee />
       <DiseasesCarouselBand />
       <WhyGrid />
       <PowerBand />

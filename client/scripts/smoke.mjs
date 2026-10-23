@@ -76,10 +76,12 @@ if (isHome) {
   check("renders doctor name", html.includes("Dr. B. Neeraj Kalkin"));
   check("renders BAMS qualification", html.includes("BAMS"));
   check("renders location", html.includes("Pasupathipalayam"));
-  check("new clinic logo renders", html.includes("brand-logo"));
-  check("desktop navigation renders with Medicines link", html.includes("site-nav") && html.includes("Medicines"));
+  check("exact clinic logo asset renders", html.includes("brand-logo") && html.includes("/images/clinic-logo.jpeg"));
+  check("hero renders with both calls to action", html.includes("home-hero") && html.includes("Book an Appointment") && html.includes("Explore Treatments"));
+  check("desktop navigation renders with requested labels", html.includes("site-nav") && html.includes("Medicines") && html.includes("Treatments Offered") && html.includes("Diseases Treated"));
   check("counters band renders", html.includes("counters-band"));
-  check("verified stats heading renders", html.includes("Qualification you can check"));
+  check("four requested statistics render", html.includes("2K+") && html.includes("Patients Treated") && html.includes("1.8K+") && html.includes("46K+"));
+  check("statistics count-up component renders", html.includes("countup"));
   check("scroll-grown tree renders", html.includes("growth-band") && html.includes("growth-tree"));
   check("growth journey renders", html.includes("Roots in tradition"));
   check("credentials band renders", html.includes("Credentials &amp; Registration") || html.includes("Credentials & Registration"));
@@ -90,6 +92,7 @@ if (isHome) {
   check("slogan languages carry lang attributes", html.includes('lang="sa"') && html.includes('lang="en"'));
   check("treatments heading renders", html.includes("Treatments Offered"));
   check("treatment marquee renders", html.includes("marquee__item") && html.includes("Panchakarma Detox"));
+  check("explore all treatments link renders", html.includes("Explore All Treatments"));
   check("why grid renders", html.includes("Why Patients Choose Us") && html.includes("why-box"));
   check("power of ayurveda renders", html.includes("The Power of Ayurveda") && html.includes("power-card"));
   check("CTA band renders", html.includes("Begin your journey to balance"));
@@ -133,6 +136,7 @@ if (isHome) {
   check("treatment area index renders", html.includes("treatment-index"));
   check("treatments are grouped by area", html.includes("treatment-group") && html.includes("Panchakarma"));
   check("treatment expectations render", html.includes("What to expect") && html.includes("tcard__includes"));
+  check("each treatment has an enquiry action", html.includes("tcard__actions") && html.includes("wa.me/919629907763"));
   check("individual assessment note renders", html.includes("Not every therapy is suitable"));
 } else if (pathname === "/diseases") {
   check("disease cards render", html.includes("dcard") && html.includes("disease-grid"));

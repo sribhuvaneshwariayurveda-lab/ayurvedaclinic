@@ -4,7 +4,11 @@ import { useContentSection } from "../data/store.js";
 import { IconWhatsApp } from "../components/ui/Icons.jsx";
 import Media from "../components/ui/Media.jsx";
 import Reveal from "../components/ui/Reveal.jsx";
-import { buildWhatsAppLink, generalEnquiryMessage } from "../lib/whatsapp.js";
+import {
+  buildWhatsAppLink,
+  generalEnquiryMessage,
+  treatmentEnquiryMessage
+} from "../lib/whatsapp.js";
 
 const treatmentImages = [
   "/images/doctor.jpg",
@@ -115,6 +119,18 @@ export default function TreatmentsPage() {
                               <p>{treatment.details}</p>
                             </details>
                           ) : null}
+
+                          <div className="tcard__actions">
+                            <a
+                              className="btn btn--sm btn--outline"
+                              href={buildWhatsAppLink(treatmentEnquiryMessage(treatment.title))}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <IconWhatsApp width={15} height={15} aria-hidden="true" />
+                              Enquire
+                            </a>
+                          </div>
                         </div>
                       </Reveal>
                     );

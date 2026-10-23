@@ -124,7 +124,7 @@ await new Promise((r) => setTimeout(r, 150));
 
 check("the Home Stats tab opens", clickTab("Home Stats"));
 await new Promise((r) => setTimeout(r, 150));
-check("the stats editor loads the bundled figures", root.innerHTML.includes("2+ yrs") && root.innerHTML.includes("Clinical experience"));
+check("the stats editor loads the bundled figures", root.innerHTML.includes("Patients Treated") && root.innerHTML.includes("Years of Trusted Service") && root.innerHTML.includes("Treatments &amp; Therapies Offered"));
 check("the stats editor has a save button", root.innerHTML.includes("Save Home Stats"));
 
 check("the About Us tab opens", clickTab("About Us"));

@@ -55,10 +55,10 @@ export const siteSettings = {
 export const nav = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/about" },
-  { label: "Treatments", to: "/treatments" },
-  { label: "Diseases", to: "/diseases" },
   { label: "Medicines", to: "/products" },
-  { label: "Contact Us", to: "/contact" }
+  { label: "Treatments Offered", to: "/treatments" },
+  { label: "Diseases Treated", to: "/diseases" },
+  { label: "Contact / Book Appointment", to: "/contact" }
 ];
 
 export const hero = {
@@ -518,13 +518,12 @@ export const products = {
 
 export const stats = {
   label: "The clinic at a glance",
-  title: "Qualification you can check. Care you can feel.",
+  title: "Care measured in experience, tradition and trust.",
   items: [
-    { value: "BAMS", label: "Qualified Ayurvedic physician" },
-    { value: "2023", label: "Graduated · M.G.R. University" },
-    { value: "2+ yrs", label: "Clinical experience" },
-    { value: "18", label: "Conditions supported" },
-    { value: "10", label: "Clinic medicines" }
+    { value: "2K+", label: "Patients Treated" },
+    { value: "2+ Decades", label: "Years of Trusted Service" },
+    { value: "1.8K+", label: "In-house Herbal Medicines" },
+    { value: "46K+", label: "Treatments & Therapies Offered" }
   ]
 };
 

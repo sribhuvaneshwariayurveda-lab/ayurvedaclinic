@@ -528,7 +528,7 @@ export default function Admin() {
     return (
       <div className="admin-editor">
         <div className="admin-editor__block">
-          <h3>Daily slogan</h3>
+          <h3>Daily Slogan</h3>
           <div className="admin-editor__row">
             <TextRow label="Heading" value={entry.heading} onChange={set("heading")} />
           </div>
@@ -619,8 +619,8 @@ export default function Admin() {
             <TextRow label="Heading line" value={stats.title} onChange={set("title")} />
           </div>
           <p className="admin-editor__hint">
-            Only publish figures that the clinic can verify. Qualification, graduation year and
-            catalogue counts are safer than patient numbers or years-of-service claims.
+            These clinic-verified figures are editable. Update them only when the clinic records
+            change, so the published patient, service, medicine and treatment counts stay accurate.
           </p>
         </div>
 

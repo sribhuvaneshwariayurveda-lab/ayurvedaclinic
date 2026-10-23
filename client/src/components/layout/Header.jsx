@@ -46,7 +46,7 @@ export default function Header() {
       <header className="site-header">
         <div className="site-header__inner">
           <Link to="/" className="brand-center" aria-label={`${clinic?.name} home`}>
-            <BrandLogo className="brand-center__mark" />
+            <BrandLogo className="brand-center__mark" priority />
             <span className="nametag">
               <span className="nametag__name">{clinic?.name}</span>
               <span className="nametag__tag">{clinic?.tagline}</span>
