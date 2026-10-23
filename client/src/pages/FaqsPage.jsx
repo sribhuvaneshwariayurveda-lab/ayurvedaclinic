@@ -1,12 +1,10 @@
-import { useState } from "react";
 import { useContentSection } from "../data/store.js";
 import { IconWhatsApp } from "../components/ui/Icons.jsx";
-import Reveal from "../components/ui/Reveal.jsx";
+import FaqAccordion from "../components/ui/FaqAccordion.jsx";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../lib/whatsapp.js";
 
 export default function FaqsPage() {
   const faqs = useContentSection("faqs") || [];
-  const [open, setOpen] = useState(0);
   return (
     <>
       <section className="page-hero">
@@ -19,24 +17,7 @@ export default function FaqsPage() {
 
       <section className="content-block">
         <div className="container">
-          <div className="faq">
-            {faqs.map((item, i) => {
-              const isOpen = open === i;
-              return (
-                <Reveal key={item.q} className={`faq__item${isOpen ? " is-open" : ""}`}>
-                  <button className="faq__q" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? -1 : i)}>
-                    {item.q}
-                    <span className="faq__ic" aria-hidden="true">
-                      +
-                    </span>
-                  </button>
-                  <div className="faq__a">
-                    <div className="faq__a-inner">{item.a}</div>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
+          <FaqAccordion items={faqs} />
           <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
             <a
               className="btn btn--green"

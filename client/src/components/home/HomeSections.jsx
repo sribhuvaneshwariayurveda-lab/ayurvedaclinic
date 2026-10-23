@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useContentSection } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
@@ -14,6 +13,7 @@ import {
   IconWhatsApp
 } from "../ui/Icons.jsx";
 import Media from "../ui/Media.jsx";
+import FaqAccordion from "../ui/FaqAccordion.jsx";
 import Reveal from "../ui/Reveal.jsx";
 import Carousel from "../ui/Carousel.jsx";
 import DiseaseCard from "../diseases/DiseaseCard.jsx";
@@ -437,7 +437,6 @@ export function TestimonialsBand() {
 /* -------------------------------------------------------------------- FAQ */
 export function HomeFaq() {
   const faqs = useContentSection("faqs") || [];
-  const [open, setOpen] = useState(0);
   return (
     <>
       <div className="head-band">
@@ -448,28 +447,7 @@ export function HomeFaq() {
       </div>
       <section className="section" style={{ background: "#fff" }}>
         <div className="container">
-          <div className="faq">
-            {faqs.map((item, i) => {
-              const isOpen = open === i;
-              return (
-                <Reveal key={item.q} className={`faq__item${isOpen ? " is-open" : ""}`}>
-                  <button
-                    className="faq__q"
-                    aria-expanded={isOpen}
-                    onClick={() => setOpen(isOpen ? -1 : i)}
-                  >
-                    {item.q}
-                    <span className="faq__ic" aria-hidden="true">
-                      +
-                    </span>
-                  </button>
-                  <div className="faq__a">
-                    <div className="faq__a-inner">{item.a}</div>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
+          <FaqAccordion items={faqs} />
           <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
             <a
               className="btn btn--green"

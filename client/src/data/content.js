@@ -7,7 +7,7 @@
 
 export const clinic = {
   name: "Sri Bhuvaneshwari Ayurveda Peedam",
-  tagline: "Classical Ayurveda",
+  tagline: "Traditional Ayurveda Care",
   doctor: "Dr. B. Neeraj Kalkin",
   qualifications: "BAMS",
   regNo: "2366/A",
@@ -64,7 +64,7 @@ export const nav = [
 export const hero = {
   label: "Doctor-led Ayurveda",
   title: "Restoring balance with",
-  titleAccent: "classical Ayurvedic care.",
+  titleAccent: "traditional Ayurveda care.",
   desc: "Personalised consultations, authentic herbal medicine and time-honoured therapies — delivered by a qualified Ayurvedic physician in a calm, welcoming clinic.",
   primaryCta: { label: "Consult the Doctor", to: "/contact" },
   secondaryCta: { label: "Explore Treatments", to: "/treatments" },

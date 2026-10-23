@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useContentSection } from "../../data/store.js";
 import { isMotionEnabled } from "../../lib/motionSettings.js";
@@ -15,32 +15,79 @@ const fallbackSteps = [
 
 /**
  * Scroll-linked tree drawing. The SVG is decorative; the adjacent list carries
- * the same information in text. Progress is clamped and only recalculated on
- * animation frames, and motion-disabled visitors get the fully grown tree.
+ * the same information in text.
+ *
+ * Progress is measured from the tree stage on mobile (where it is not sticky)
+ * and from the whole section on desktop (where the stage is sticky). Updates are
+ * throttled with requestAnimationFrame, and growth is one-way so scrolling back
+ * up can never shrink or reset the tree. Reduced-motion visitors see it fully
+ * grown immediately.
  */
 export default function GrowingTree() {
   const about = useContentSection("about");
   const steps = about?.journey?.steps?.length ? about.journey.steps : fallbackSteps;
   const sectionRef = useRef(null);
+  const stageRef = useRef(null);
+  const progressRef = useRef(isMotionEnabled() ? 0 : 1);
   const [progress, setProgress] = useState(() => (isMotionEnabled() ? 0 : 1));
 
-  useEffect(() => {
-    const node = sectionRef.current;
-    if (!node) return undefined;
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const stage = stageRef.current;
+    if (!section) return undefined;
 
     let frame = 0;
     let observer = null;
+    const mobileQuery =
+      typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 820px)") : null;
+
+    const commit = (next) => {
+      if (next <= progressRef.current + 0.001) return;
+      progressRef.current = next;
+      setProgress(next);
+    };
+
+    const finish = () => {
+      if (progressRef.current === 1) return;
+      progressRef.current = 1;
+      setProgress(1);
+    };
 
     const update = () => {
       frame = 0;
+
       if (!isMotionEnabled()) {
-        setProgress(1);
+        finish();
         return;
       }
-      const rect = node.getBoundingClientRect();
-      const viewport = window.innerHeight || 800;
-      const travel = Math.max(1, rect.height - viewport * 0.45);
-      setProgress(clamp((viewport * 0.35 - rect.top) / travel));
+
+      const viewport =
+        window.visualViewport?.height ||
+        window.innerHeight ||
+        document.documentElement?.clientHeight ||
+        800;
+      const stageRect = (stage || section).getBoundingClientRect();
+
+      let ratio;
+      if (mobileQuery?.matches) {
+        // The stage sits at the top of the section on mobile. Start as it
+        // enters from the bottom and finish while it is still comfortably in
+        // view, so the trunk and leaves complete on screen.
+        const startLine = viewport * 0.92;
+        const endLine = viewport * 0.2;
+        const travel = Math.max(1, startLine - endLine);
+        ratio = (startLine - stageRect.top) / travel;
+      } else {
+        // On desktop the stage is sticky, so the section's own travel is the
+        // meaningful progress measure.
+        const sectionRect = section.getBoundingClientRect();
+        const startLine = viewport * 0.9;
+        const stageHeight = Math.max(1, stageRect.height);
+        const travel = Math.max(1, sectionRect.height - viewport * 0.55, stageHeight * 0.9);
+        ratio = (startLine - sectionRect.top) / travel;
+      }
+
+      commit(clamp(ratio));
     };
 
     const requestUpdate = () => {
@@ -48,8 +95,15 @@ export default function GrowingTree() {
     };
 
     update();
+
     window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("touchmove", requestUpdate, { passive: true });
+    window.addEventListener("touchstart", requestUpdate, { passive: true });
     window.addEventListener("resize", requestUpdate);
+    window.addEventListener("orientationchange", requestUpdate);
+    window.visualViewport?.addEventListener("resize", requestUpdate);
+    window.visualViewport?.addEventListener("scroll", requestUpdate);
+    mobileQuery?.addEventListener?.("change", requestUpdate);
 
     if (typeof MutationObserver !== "undefined") {
       observer = new MutationObserver(requestUpdate);
@@ -58,20 +112,26 @@ export default function GrowingTree() {
 
     return () => {
       window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("touchmove", requestUpdate);
+      window.removeEventListener("touchstart", requestUpdate);
       window.removeEventListener("resize", requestUpdate);
+      window.removeEventListener("orientationchange", requestUpdate);
+      window.visualViewport?.removeEventListener("resize", requestUpdate);
+      window.visualViewport?.removeEventListener("scroll", requestUpdate);
+      mobileQuery?.removeEventListener?.("change", requestUpdate);
       if (frame) window.cancelAnimationFrame(frame);
       if (observer) observer.disconnect();
     };
   }, []);
 
   const draw = (start, end = 1) => 1 - clamp((progress - start) / (end - start));
-  const leafIn = clamp((progress - 0.5) / 0.5);
+  const leafIn = clamp((progress - 0.58) / 0.42);
   const activeStep = Math.min(steps.length - 1, Math.floor(progress * steps.length));
 
   return (
     <section className="growth-band" ref={sectionRef} aria-labelledby="growth-title">
       <div className="container growth-band__inner">
-        <div className="growth-tree-stage" aria-hidden="true">
+        <div className="growth-tree-stage" ref={stageRef} aria-hidden="true">
           <span className="growth-tree-stage__sun" style={{ opacity: 0.35 + leafIn * 0.65 }} />
           <svg className="growth-tree" viewBox="0 0 440 540" fill="none">
             <ellipse cx="220" cy="484" rx="145" ry="20" fill="rgba(20, 78, 31, 0.09)" />

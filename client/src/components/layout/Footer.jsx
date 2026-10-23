@@ -41,7 +41,7 @@ export default function Footer() {
                 </span>
               </div>
               <p style={{ color: "rgba(255,255,255,0.92)", maxWidth: "36ch" }}>
-                Doctor-led classical Ayurvedic care — personalised consultations, authentic herbal
+                Doctor-led traditional Ayurveda care — personalised consultations, authentic herbal
                 medicine and traditional therapies in Karur, Tamil Nadu.
               </p>
               {clinic?.regNo ? (

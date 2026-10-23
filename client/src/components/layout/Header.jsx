@@ -3,7 +3,24 @@ import { Link, useLocation } from "react-router-dom";
 import { useContent } from "../../data/store.js";
 import { buildWhatsAppLink, generalEnquiryMessage } from "../../lib/whatsapp.js";
 import BrandLogo from "../ui/BrandLogo.jsx";
-import { IconMenu, IconPhone, IconWhatsApp, IconX } from "../ui/Icons.jsx";
+import {
+  IconHeart,
+  IconHome,
+  IconLeaf,
+  IconMenu,
+  IconPhone,
+  IconUsers,
+  IconWhatsApp,
+  IconX
+} from "../ui/Icons.jsx";
+
+const mobileNav = [
+  { label: "Home", to: "/", Icon: IconHome },
+  { label: "About Us", to: "/about", Icon: IconUsers },
+  { label: "Diseases", to: "/diseases", Icon: IconHeart },
+  { label: "Treatments", to: "/treatments", Icon: IconLeaf },
+  { label: "Contact Us", to: "/contact", Icon: IconPhone }
+];
 
 export default function Header() {
   const { clinic, nav } = useContent();
@@ -140,6 +157,27 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {location.pathname.startsWith("/admin") ? null : (
+        <nav className="mobile-dock" aria-label="Mobile primary">
+          {mobileNav.map(({ label, to, Icon }) => {
+            const active = isActive(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`mobile-dock__link${active ? " is-active" : ""}`}
+                aria-current={active ? "page" : undefined}
+              >
+                <span className="mobile-dock__icon" aria-hidden="true">
+                  <Icon width={21} height={21} />
+                </span>
+                <span className="mobile-dock__label">{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </>
   );
 }
