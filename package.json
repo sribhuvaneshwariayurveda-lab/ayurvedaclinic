@@ -20,6 +20,7 @@
     "test:images": "npm --prefix client run test:images",
     "test:auth": "node scripts/test-auth.mjs",
     "test:content": "node scripts/test-content-api.mjs",
-    "test": "npm run test:auth && npm run test:content && npm run test:store && npm run test:admin && npm run test:render && npm run test:images && npm run test:smoke"
+    "test:enquiries": "node scripts/test-enquiries-api.mjs",
+    "test": "npm run test:auth && npm run test:content && npm run test:enquiries && npm run test:store && npm run test:admin && npm run test:render && npm run test:images && npm run test:smoke"
   }
 }

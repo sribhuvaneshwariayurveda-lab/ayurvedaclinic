@@ -11,6 +11,7 @@ import "./styles/content.css";
 import "./styles/revamp.css";
 import "./styles/leaves.css";
 import "./styles/slogan.css";
+import "./styles/enquiry.css";
 
 window.__SBAP_BOOTED__ = true;
 initMotion();

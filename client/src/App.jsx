@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import Header from "./components/layout/Header.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import FloatingWhatsApp from "./components/layout/FloatingWhatsApp.jsx";
+import EnquiryPopup from "./components/ui/EnquiryPopup.jsx";
 import Home from "./pages/Home.jsx";
 import About from "./pages/About.jsx";
 import TreatmentsPage from "./pages/TreatmentsPage.jsx";
@@ -72,6 +73,7 @@ export default function App() {
       </main>
       <Footer />
       <FloatingWhatsApp />
+      <EnquiryPopup />
     </>
   );
 }

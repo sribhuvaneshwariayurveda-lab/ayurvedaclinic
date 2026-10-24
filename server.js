@@ -117,7 +117,7 @@ function notFound(res) {
  *   ADMIN_PASSWORD_HASH  optional pre-computed scrypt hash from
  *                        `npm run hash-password`
  *                        format: $scrypt$N=<n>,r=<r>,p=<p>$<saltHex>$<hashHex>
- *                        paste the VALUE ONLY — no variable name, no quotes,
+ *                        paste the VALUE ONLY â€” no variable name, no quotes,
  *                        no leading/trailing whitespace or newline
  *   If both are set, a valid ADMIN_PASSWORD_HASH takes precedence. If the
  *   hash is present but unusable, ADMIN_PASSWORD is used instead. With
@@ -127,7 +127,7 @@ function notFound(res) {
  *                        local http testing.
  *
  * These variables are read once, at startup: restart the application after
- * changing them (no rebuild is needed — server.js is not bundled). Run
+ * changing them (no rebuild is needed â€” server.js is not bundled). Run
  * `npm run check-admin-config` to validate a value locally before pasting it
  * into the host's env panel.
  *
@@ -148,7 +148,11 @@ const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 const DATA_DIR = path.join(__dirname, "data");
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
+const ENQUIRIES_DB_FILE = process.env.ENQUIRIES_DB_FILE
+  ? path.resolve(__dirname, process.env.ENQUIRIES_DB_FILE)
+  : path.join(DATA_DIR, "enquiries.sqlite");
 const MAX_CONTENT_BYTES = 512 * 1024;
+const MAX_ENQUIRY_BYTES = 32 * 1024;
 const SLOGAN_LIMITS = {
   heading: 120,
   english: 500,
@@ -162,10 +166,16 @@ const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const LOGIN_LIMIT = 10;
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const ENQUIRY_RATE_LIMIT = Math.max(1, Number(process.env.ENQUIRY_RATE_LIMIT) || 8);
+const ENQUIRY_WINDOW_MS = 15 * 60 * 1000;
 const UPLOAD_NAME_RE = /^[0-9a-f]{32}\.(jpg|png|webp)$/;
 
 const sessions = new Map(); // token -> { username, expires }
 const loginAttempts = new Map(); // ip -> { count, reset }
+const enquiryAttempts = new Map(); // ip -> { count, reset }
+let enquiryModule = null;
+let enquiryStore = null;
+let enquiryStoreError = "";
 
 try {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -179,6 +189,14 @@ try {
   console.error(`[ayurveda-clinic] cannot create data dir: ${e.message}`);
 }
 
+try {
+  enquiryModule = require("./server/enquiries.js");
+  enquiryStore = enquiryModule.createEnquiryStore(ENQUIRIES_DB_FILE);
+} catch (e) {
+  enquiryStoreError = e.message;
+  console.error(`[ayurveda-clinic] patient enquiries unavailable: ${e.message}`);
+}
+
 setInterval(() => {
   const now = Date.now();
   for (const [token, s] of sessions) {
@@ -186,6 +204,9 @@ setInterval(() => {
   }
   for (const [ip, a] of loginAttempts) {
     if (a.reset <= now) loginAttempts.delete(ip);
+  }
+  for (const [ip, a] of enquiryAttempts) {
+    if (a.reset <= now) enquiryAttempts.delete(ip);
   }
 }, 15 * 60 * 1000).unref();
 
@@ -248,23 +269,23 @@ function describeAdminHashProblem(stored) {
 
 /* Credential-free explanation for every reason code. */
 const ADMIN_HASH_PROBLEMS = {
-  missing: "ADMIN_PASSWORD_HASH is empty — set it to the hash printed by `npm run hash-password`.",
+  missing: "ADMIN_PASSWORD_HASH is empty â€” set it to the hash printed by `npm run hash-password`.",
   whitespace:
-    "ADMIN_PASSWORD_HASH has leading/trailing whitespace or a trailing newline — paste the value with no spaces around it.",
+    "ADMIN_PASSWORD_HASH has leading/trailing whitespace or a trailing newline â€” paste the value with no spaces around it.",
   prefixed:
-    'ADMIN_PASSWORD_HASH starts with "ADMIN_PASSWORD_HASH=" — paste ONLY the value that begins with "$scrypt$".',
-  quoted: "ADMIN_PASSWORD_HASH is wrapped in quotes — paste the bare value, with no quotes.",
+    'ADMIN_PASSWORD_HASH starts with "ADMIN_PASSWORD_HASH=" â€” paste ONLY the value that begins with "$scrypt$".',
+  quoted: "ADMIN_PASSWORD_HASH is wrapped in quotes â€” paste the bare value, with no quotes.",
   not_scrypt:
-    'ADMIN_PASSWORD_HASH is not an scrypt hash — generate one with `npm run hash-password` (it must begin with "$scrypt$").',
-  malformed: 'ADMIN_PASSWORD_HASH is malformed — expected "$scrypt$N=16384,r=8,p=1$<saltHex>$<hashHex>".',
+    'ADMIN_PASSWORD_HASH is not an scrypt hash â€” generate one with `npm run hash-password` (it must begin with "$scrypt$").',
+  malformed: 'ADMIN_PASSWORD_HASH is malformed â€” expected "$scrypt$N=16384,r=8,p=1$<saltHex>$<hashHex>".',
   short_salt:
-    "ADMIN_PASSWORD_HASH has a salt shorter than 16 bytes — regenerate it with `npm run hash-password`.",
+    "ADMIN_PASSWORD_HASH has a salt shorter than 16 bytes â€” regenerate it with `npm run hash-password`.",
   short_hash:
-    "ADMIN_PASSWORD_HASH has a key shorter than 64 bytes — regenerate it with `npm run hash-password`.",
+    "ADMIN_PASSWORD_HASH has a key shorter than 64 bytes â€” regenerate it with `npm run hash-password`.",
   weak_params:
-    "ADMIN_PASSWORD_HASH uses weak scrypt parameters (N must be >= 16384, r >= 8, p >= 1) — regenerate it with `npm run hash-password`.",
+    "ADMIN_PASSWORD_HASH uses weak scrypt parameters (N must be >= 16384, r >= 8, p >= 1) â€” regenerate it with `npm run hash-password`.",
   unsafe_params:
-    "ADMIN_PASSWORD_HASH uses an scrypt cost above the accepted ceiling — regenerate it with `npm run hash-password`.",
+    "ADMIN_PASSWORD_HASH uses an scrypt cost above the accepted ceiling â€” regenerate it with `npm run hash-password`.",
 };
 
 /** Passwords shorter than this are accepted but flagged in the startup log. */
@@ -287,7 +308,7 @@ function derivePasswordHash(password) {
  *
  * Precedence:
  *   1. ADMIN_PASSWORD_HASH when present and valid.
- *   2. ADMIN_PASSWORD — hashed in memory right now with a random salt; the
+ *   2. ADMIN_PASSWORD â€” hashed in memory right now with a random salt; the
  *      plain-text variable is removed from the process environment afterwards.
  *   3. Neither -> config_missing. An unusable hash with no password ->
  *      config_invalid. Both fail closed (every admin endpoint answers 503).
@@ -335,7 +356,7 @@ function resolveAdminConfig() {
           ok: false,
           code: "config_invalid",
           reason: "derive_failed",
-          message: "ADMIN_PASSWORD could not be hashed at startup — use a shorter password or set ADMIN_PASSWORD_HASH.",
+          message: "ADMIN_PASSWORD could not be hashed at startup â€” use a shorter password or set ADMIN_PASSWORD_HASH.",
           source: null,
           hash: "",
           ignoredHashReason: null,
@@ -353,7 +374,7 @@ function resolveAdminConfig() {
       ok: false,
       code: "config_missing",
       reason: "missing_username",
-      message: "ADMIN_USERNAME is not set — set the admin login name.",
+      message: "ADMIN_USERNAME is not set â€” set the admin login name.",
       source: null,
       hash: "",
       ignoredHashReason: null,
@@ -367,7 +388,7 @@ function resolveAdminConfig() {
       code: "config_missing",
       reason: "missing_password",
       message:
-        "Neither ADMIN_PASSWORD nor ADMIN_PASSWORD_HASH is set — set ADMIN_PASSWORD to the admin password (the server hashes it at startup).",
+        "Neither ADMIN_PASSWORD nor ADMIN_PASSWORD_HASH is set â€” set ADMIN_PASSWORD to the admin password (the server hashes it at startup).",
       source: null,
       hash: "",
       ignoredHashReason: null,
@@ -392,28 +413,28 @@ function validateAdminConfig() {
   return ADMIN_CONFIG;
 }
 
-/* Startup diagnostics — presence, shape and flags only. Never prints values. */
+/* Startup diagnostics â€” presence, shape and flags only. Never prints values. */
 function logAdminConfig() {
   const tag = "[ayurveda-clinic] admin";
   const config = validateAdminConfig();
   if (config.code === "config_missing") {
     console.warn(
-      `${tag}: DISABLED — set ADMIN_USERNAME and ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH). Admin API answers 503.`
+      `${tag}: DISABLED â€” set ADMIN_USERNAME and ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH). Admin API answers 503.`
     );
-    console.warn(`${tag}: environment variables are read at startup — restart the application after changing them.`);
+    console.warn(`${tag}: environment variables are read at startup â€” restart the application after changing them.`);
     return;
   }
   console.log(
-    `${tag}: enabled — using ${
+    `${tag}: enabled â€” using ${
       config.source === "password" ? "ADMIN_PASSWORD (hashed in memory at startup)" : "ADMIN_PASSWORD_HASH"
     } from the environment.`
   );
   if (ADMIN_USERNAME !== ADMIN_USERNAME.trim()) {
-    console.warn(`${tag}: ADMIN_USERNAME has leading/trailing whitespace — remove it or logins will fail.`);
+    console.warn(`${tag}: ADMIN_USERNAME has leading/trailing whitespace â€” remove it or logins will fail.`);
   }
   if (config.ignoredHashReason) {
     console.warn(
-      `${tag}: ADMIN_PASSWORD_HASH is not usable (${config.ignoredHashReason}) — ignoring it and using ADMIN_PASSWORD instead.`
+      `${tag}: ADMIN_PASSWORD_HASH is not usable (${config.ignoredHashReason}) â€” ignoring it and using ADMIN_PASSWORD instead.`
     );
   }
   if (config.ok) {
@@ -426,11 +447,11 @@ function logAdminConfig() {
       );
     } else {
       console.log(
-        `${tag}: ADMIN_PASSWORD accepted — in-memory scrypt hash derived with a random salt; the plain-text password is not stored or logged.`
+        `${tag}: ADMIN_PASSWORD accepted â€” in-memory scrypt hash derived with a random salt; the plain-text password is not stored or logged.`
       );
       if (config.passwordTooShort) {
         console.warn(
-          `${tag}: note — ADMIN_PASSWORD is shorter than ${MIN_ADMIN_PASSWORD_LENGTH} characters; a longer password is safer.`
+          `${tag}: note â€” ADMIN_PASSWORD is shorter than ${MIN_ADMIN_PASSWORD_LENGTH} characters; a longer password is safer.`
         );
       }
     }
@@ -438,8 +459,8 @@ function logAdminConfig() {
     console.warn(`${tag}: ${config.message}`);
     console.warn(`${tag}: the admin API answers 503 (config_invalid) until this is fixed.`);
   }
-  console.log(`${tag}: COOKIE_SECURE ${COOKIE_SECURE ? "=1 (session cookie is Secure; requires HTTPS)" : "unset (session cookie is not Secure — set =1 in production HTTPS)"}.`);
-  console.log(`${tag}: environment variables are read at startup — restart the application after changing them.`);
+  console.log(`${tag}: COOKIE_SECURE ${COOKIE_SECURE ? "=1 (session cookie is Secure; requires HTTPS)" : "unset (session cookie is not Secure â€” set =1 in production HTTPS)"}.`);
+  console.log(`${tag}: environment variables are read at startup â€” restart the application after changing them.`);
 }
 
 /* Resolve the credential once, before any request can arrive. */
@@ -551,6 +572,23 @@ function recordFailedLogin(ip) {
   else a.count += 1;
 }
 
+function enquiryBlocked(ip) {
+  const a = enquiryAttempts.get(ip);
+  if (!a) return false;
+  if (a.reset <= Date.now()) {
+    enquiryAttempts.delete(ip);
+    return false;
+  }
+  return a.count >= ENQUIRY_RATE_LIMIT;
+}
+
+function recordEnquiryAttempt(ip) {
+  const now = Date.now();
+  const a = enquiryAttempts.get(ip);
+  if (!a || a.reset <= now) enquiryAttempts.set(ip, { count: 1, reset: now + ENQUIRY_WINDOW_MS });
+  else a.count += 1;
+}
+
 function uploadTarget(contentType) {
   const type = String(contentType || "").split(";")[0].trim().toLowerCase();
   if (type === "image/jpeg") return "jpg";
@@ -572,7 +610,7 @@ function magicMatches(buf, ext) {
 
 /**
  * Read the admin-managed content document.
- * Returns {} when the file is missing, unreadable or not a JSON object — the
+ * Returns {} when the file is missing, unreadable or not a JSON object â€” the
  * client then falls back to the copy bundled with the site.
  */
 async function readContentDoc() {
@@ -596,7 +634,7 @@ async function writeContentDoc(doc) {
 /* ---------------------------------------------------------------------------
  * Daily slogan. The published entry and the working draft live in the same
  * content document, but GET /api/content only ever receives the active
- * published entry — the draft is never exposed to public visitors.
+ * published entry â€” the draft is never exposed to public visitors.
  * ------------------------------------------------------------------------- */
 
 function isPlainObject(value) {
@@ -718,6 +756,194 @@ async function handleContent(req, res) {
   sendJson(res, 200, doc, { "Cache-Control": "no-cache" });
 }
 
+function enquiryFilters(req) {
+  const url = new URL(req.url, "http://localhost");
+  return {
+    q: url.searchParams.get("q") || "",
+    status: url.searchParams.get("status") || "",
+    from: url.searchParams.get("from") || "",
+    to: url.searchParams.get("to") || "",
+    page: url.searchParams.get("page") || 1,
+    limit: url.searchParams.get("limit") || 20,
+  };
+}
+
+async function handlePublicEnquiry(req, res) {
+  if (!enquiryStore || !enquiryModule) {
+    sendJson(res, 503, {
+      error: "Online enquiries are temporarily unavailable. Please call or WhatsApp the clinic.",
+      code: "enquiries_unavailable",
+    });
+    return;
+  }
+  if (badOrigin(req)) {
+    sendJson(res, 403, { error: "Forbidden.", code: "origin_rejected" });
+    return;
+  }
+  const ip = clientIp(req);
+  if (enquiryBlocked(ip)) {
+    sendJson(
+      res,
+      429,
+      { error: "Too many enquiries. Please try again later or contact the clinic directly.", code: "rate_limited" },
+      { "Retry-After": "900" }
+    );
+    return;
+  }
+  recordEnquiryAttempt(ip);
+
+  let body;
+  try {
+    body = await readBody(req, MAX_ENQUIRY_BYTES);
+  } catch (e) {
+    sendJson(res, 413, { error: "Enquiry is too large.", code: "request_too_large" });
+    return;
+  }
+  let input;
+  try {
+    input = JSON.parse(body.toString("utf8"));
+  } catch (e) {
+    sendJson(res, 400, { error: "Invalid request.", code: "invalid_request" });
+    return;
+  }
+
+  // Honeypot: ordinary visitors never see or fill this field. Return the same
+  // success shape without writing anything so simple bots cannot probe it.
+  if (input && typeof input.website === "string" && input.website.trim()) {
+    sendJson(res, 201, {
+      ok: true,
+      reference: "ENQ-RECEIVED",
+      message: "Thank you. Your enquiry has been received.",
+    }, { "Cache-Control": "no-store" });
+    return;
+  }
+
+  const validation = enquiryModule.validateEnquiry(input);
+  if (!validation.ok) {
+    sendJson(res, 422, { error: validation.error, fields: validation.fields }, { "Cache-Control": "no-store" });
+    return;
+  }
+
+  try {
+    const result = enquiryStore.create(validation.value);
+    sendJson(
+      res,
+      result.duplicate ? 200 : 201,
+      {
+        ok: true,
+        duplicate: result.duplicate,
+        reference: result.record.reference,
+        message: "Thank you. Your enquiry has been received. Our team will contact you using the details provided.",
+      },
+      { "Cache-Control": "no-store" }
+    );
+  } catch (e) {
+    console.error(`[ayurveda-clinic] could not save patient enquiry: ${e.message}`);
+    sendJson(res, 500, { error: "Could not save the enquiry. Please try again or contact the clinic." });
+  }
+}
+
+async function handleAdminEnquiries(req, res, sub) {
+  const s = getSession(req);
+  if (!s) {
+    sendJson(res, 401, { error: "Not authenticated.", code: "no_session" });
+    return;
+  }
+  if (!enquiryStore || !enquiryModule) {
+    sendJson(res, 503, {
+      error: "Patient enquiry storage is unavailable on this server.",
+      code: "enquiries_unavailable",
+    });
+    return;
+  }
+
+  if (req.method === "GET" && sub === "/enquiries") {
+    sendJson(res, 200, {
+      ...enquiryStore.list(enquiryFilters(req)),
+      statuses: enquiryModule.STATUSES,
+    }, { "Cache-Control": "no-store" });
+    return;
+  }
+
+  if (req.method === "GET" && sub === "/enquiries/export.csv") {
+    const csv = enquiryStore.csv(enquiryFilters(req));
+    const body = Buffer.from(csv, "utf8");
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="patient-enquiries-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Content-Length": body.length,
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end(body);
+    return;
+  }
+
+  const match = /^\/enquiries\/(\d+)$/.exec(sub);
+  if (!match) {
+    sendJson(res, 404, { error: "Not found." });
+    return;
+  }
+  const id = Number(match[1]);
+
+  if (req.method === "GET") {
+    const record = enquiryStore.getById(id);
+    if (!record) {
+      sendJson(res, 404, { error: "Enquiry not found." });
+      return;
+    }
+    sendJson(res, 200, { enquiry: record }, { "Cache-Control": "no-store" });
+    return;
+  }
+
+  if (req.method === "PATCH") {
+    if (badOrigin(req)) {
+      sendJson(res, 403, { error: "Forbidden.", code: "origin_rejected" });
+      return;
+    }
+    let body;
+    try {
+      body = await readBody(req, 2 * 1024);
+    } catch (e) {
+      sendJson(res, 413, { error: "Request too large.", code: "request_too_large" });
+      return;
+    }
+    let patch;
+    try {
+      patch = JSON.parse(body.toString("utf8"));
+    } catch (e) {
+      sendJson(res, 400, { error: "Invalid request.", code: "invalid_request" });
+      return;
+    }
+    if (!patch || typeof patch !== "object" || typeof patch.status !== "string") {
+      sendJson(res, 400, { error: "A valid status is required.", code: "invalid_status" });
+      return;
+    }
+    const result = enquiryStore.updateStatus(id, patch.status);
+    if (!result.ok) {
+      sendJson(res, result.notFound ? 404 : 400, { error: result.error });
+      return;
+    }
+    sendJson(res, 200, { ok: true, enquiry: result.record }, { "Cache-Control": "no-store" });
+    return;
+  }
+
+  if (req.method === "DELETE") {
+    if (badOrigin(req)) {
+      sendJson(res, 403, { error: "Forbidden.", code: "origin_rejected" });
+      return;
+    }
+    if (!enquiryStore.remove(id)) {
+      sendJson(res, 404, { error: "Enquiry not found." });
+      return;
+    }
+    sendJson(res, 200, { ok: true, id }, { "Cache-Control": "no-store" });
+    return;
+  }
+
+  sendJson(res, 405, { error: "Method Not Allowed." }, { Allow: "GET, PATCH, DELETE" });
+}
+
 async function handleAdmin(req, res, pathname) {
   const config = validateAdminConfig();
   if (config.code === "config_missing") {
@@ -738,7 +964,7 @@ async function handleAdmin(req, res, pathname) {
 
   if (req.method === "POST" && sub === "/login") {
     if (badOrigin(req)) {
-      console.warn("[ayurveda-clinic] admin: login rejected — Origin/Referer host does not match Host header.");
+      console.warn("[ayurveda-clinic] admin: login rejected â€” Origin/Referer host does not match Host header.");
       sendJson(res, 403, { error: "Forbidden.", code: "origin_rejected" });
       return;
     }
@@ -765,7 +991,7 @@ async function handleAdmin(req, res, pathname) {
     const okPass = await verifyPassword(creds.password, ADMIN_PASSWORD_HASH);
     if (!okUser || !okPass) {
       recordFailedLogin(ip);
-      console.warn(`[ayurveda-clinic] admin: login rejected — ${okUser ? "wrong password" : "unknown username"}.`);
+      console.warn(`[ayurveda-clinic] admin: login rejected â€” ${okUser ? "wrong password" : "unknown username"}.`);
       // Deliberately identical response for unknown user vs wrong password.
       sendJson(res, 401, { error: "Invalid username or password.", code: "invalid_credentials" });
       return;
@@ -774,7 +1000,7 @@ async function handleAdmin(req, res, pathname) {
     // Safe cookie diagnostic: a Secure cookie is dropped by browsers over http.
     const proto = req.headers["x-forwarded-proto"] || (req.socket.encrypted ? "https" : "http");
     if (COOKIE_SECURE && proto !== "https") {
-      console.warn("[ayurveda-clinic] admin: COOKIE_SECURE=1 but request was not HTTPS — browsers will drop the session cookie (login won't persist).");
+      console.warn("[ayurveda-clinic] admin: COOKIE_SECURE=1 but request was not HTTPS â€” browsers will drop the session cookie (login won't persist).");
     }
     const token = crypto.randomBytes(32).toString("hex");
     sessions.set(token, { username: ADMIN_USERNAME, expires: Date.now() + SESSION_TTL_MS });
@@ -956,6 +1182,11 @@ async function handleAdmin(req, res, pathname) {
     return;
   }
 
+  if (sub === "/enquiries" || sub.startsWith("/enquiries/")) {
+    await handleAdminEnquiries(req, res, sub);
+    return;
+  }
+
   sendJson(res, 404, { error: "Not found." });
 }
 
@@ -1011,6 +1242,19 @@ const server = http.createServer((req, res) => {
     }
     handleContent(req, res).catch((err) => {
       console.error(`[ayurveda-clinic] content error: ${err.message}`);
+      sendJson(res, 500, { error: "Internal error." });
+    });
+    return;
+  }
+
+  // Public patient-enquiry submission. Records are never readable publicly.
+  if (pathname === "/api/enquiries") {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { error: "Method Not Allowed." }, { Allow: "POST" });
+      return;
+    }
+    handlePublicEnquiry(req, res).catch((err) => {
+      console.error(`[ayurveda-clinic] enquiry error: ${err.message}`);
       sendJson(res, 500, { error: "Internal error." });
     });
     return;
@@ -1077,3 +1321,4 @@ server.listen(PORT, HOST, () => {
   console.log(`[ayurveda-clinic] serving ${DIST_DIR} at http://${HOST}:${PORT}`);
   logAdminConfig();
 });
+

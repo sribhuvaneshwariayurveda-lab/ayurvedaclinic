@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getContentSnapshot, saveContent } from "../data/store.js";
 import SloganScroll from "../components/slogan/SloganScroll.jsx";
+import PatientEnquiriesPanel from "../components/admin/PatientEnquiriesPanel.jsx";
 import { EMPTY_SLOGAN, isSloganActive } from "../lib/slogan.js";
 
 /**
@@ -93,6 +94,7 @@ function normalizeSloganSection(stored, fallback) {
 
 const TABS = [
   { id: "images", label: "Images" },
+  { id: "enquiries", label: "Patient Enquiries" },
   { id: "slogan", label: "Daily Slogan" },
   { id: "stats", label: "Home Stats" },
   { id: "about", label: "About Us" },
@@ -1260,15 +1262,15 @@ export default function Admin() {
           </span>
           <h1>Clinic admin panel</h1>
           <p>
-            Sign in to manage the homepage figures, the About Us page, the product list, the
-            conditions we cover and the images used across the site. Changes are saved to the server
-            and appear immediately.
+            Sign in to manage patient enquiries, the homepage figures, the About Us page, the product
+            list, the conditions we cover and the images used across the site. Changes are saved to
+            the server and appear immediately.
           </p>
         </div>
       </section>
 
       <section className="section">
-        <div className="container" style={{ maxWidth: 860 }}>
+        <div className="container" style={{ maxWidth: user ? 1180 : 860 }}>
           {checking ? (
             <p>Checking session…</p>
           ) : !user ? (
@@ -1335,6 +1337,15 @@ export default function Admin() {
                 >
                   {status.text}
                 </p>
+              ) : null}
+
+              {tab === "enquiries" ? (
+                <PatientEnquiriesPanel
+                  onSessionExpired={() => {
+                    setUser(null);
+                    setError("Your session has ended. Please sign in again.");
+                  }}
+                />
               ) : null}
 
               {tab === "images" ? (
